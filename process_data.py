@@ -13,8 +13,8 @@ aedat['info'] = {}
 
 #aedat['importParams']['endEvent'] = 2e6;
 
-aedat['importParams']['filePath'] = './data/ball1.aedat'
-aedat['importParams']['filePath'] = './data/DAVIS240C-2016-01-11T15-50-11+0000-04010058-0_recording_2.aedat'
+#aedat['importParams']['filePath'] = './data/ball1.aedat'
+aedat['importParams']['filePath'] = './data/DAVIS240C-2016-02-23T12-42-14+0000-04010058-0_recording_8.aedat'
 
 
 aedat = ImportAedat(aedat)
