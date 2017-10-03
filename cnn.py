@@ -12,52 +12,28 @@ from keras.layers import Dense, Dropout, Flatten
 from keras.layers import Conv2D, MaxPooling2D
 from keras import backend as K
 import h5py
+import misc
 
-batch_size = 1
-num_classes = 5 # TODO: change to 4 after remove invalid label 0
+batch_size = 8
+num_classes = 4
 epochs = 12
 
 # input image dimensions
 img_rows, img_cols = 240, 180
-# img_rows, img_cols = 28, 28
 
-h5f = h5py.File("./data/processed/recording2.hdf5",'r')
-d_frames = h5f['images'][:]
-d_labels = h5f['labels'][:]
+hdf5_train = h5py.File("./data/processed/recording6.hdf5",'r')
 
-x_train = d_frames[:-10]
-x_test = d_frames[-10:]
-
-x_train = x_train.reshape(x_train.shape[0], img_rows, img_cols, 1)
+x_test = hdf5_train['images'][-10:] # TODO: load seperate hdf5 file with validation data
 x_test = x_test.reshape(x_test.shape[0], img_rows, img_cols, 1)
 
-y_train = d_labels[:-10]
-y_test = d_labels[-10:]
-
-
-# the data, shuffled and split between train and test sets
-# (x_train, y_train), (x_test, y_test) = mnist.load_data()
-#
-# if K.image_data_format() == 'channels_first':
-#     x_train = x_train.reshape(x_train.shape[0], 1, img_rows, img_cols)
-#     x_test = x_test.reshape(x_test.shape[0], 1, img_rows, img_cols)
-#     input_shape = (1, img_rows, img_cols)
-# else:
-#     x_train = x_train.reshape(x_train.shape[0], img_rows, img_cols, 1)
-#     x_test = x_test.reshape(x_test.shape[0], img_rows, img_cols, 1) # TODO: ??? d_frames has shape (nr_frames,240,180), need (nr_frames,240,180,1)?
-#     input_shape = (img_rows, img_cols, 1)
-#
-# x_train = x_train.astype('float32')
-# x_test = x_test.astype('float32')
-# x_train /= 255
-# x_test /= 255
-# print('x_train shape:', x_train.shape)
-# print(x_train.shape[0], 'train samples')
-# print(x_test.shape[0], 'test samples')
-
-# convert class vectors to binary class matrices
-y_train = keras.utils.to_categorical(y_train, num_classes)
+y_test = hdf5_train['labels'][-10:]
 y_test = keras.utils.to_categorical(y_test, num_classes)
+
+train_batches = misc.generate_batches_from_hdf5_file(hdf5_file=hdf5_train,
+                                                     batch_size=batch_size,
+                                                     dimensions=(batch_size,img_rows,img_cols,1),
+                                                     num_classes=num_classes)
+
 
 model = Sequential()
 model.add(Conv2D(4, kernel_size=(5, 5),
@@ -86,11 +62,18 @@ model.compile(loss=keras.losses.categorical_crossentropy,
               optimizer=keras.optimizers.Adadelta(),
               metrics=['accuracy'])
 
-model.fit(x_train, y_train,
-          batch_size=batch_size,
-          epochs=epochs,
-          verbose=1,
-          validation_data=(x_test, y_test))
+# for e in range(epochs):
+#     print("epoch %d" % e)
+#     for x_batch, y_batch in train_batches:
+#         model.fit(x_batch, y_batch, batch_size=32, nb_epoch=1)
+
+num_batches_per_epoch = int((len(hdf5_train['labels']) - 1) / batch_size)
+model.fit_generator(generator=train_batches,
+                    steps_per_epoch=num_batches_per_epoch,
+                    nb_epoch=epochs,
+                    validation_data=(x_test, y_test))
+
+
 score = model.evaluate(x_test, y_test, verbose=0)
 print('Test loss:', score[0])
 print('Test accuracy:', score[1])
