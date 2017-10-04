@@ -62,7 +62,7 @@ aedat = {}
 aedat['importParams'] = {}
 aedat['info'] = {}
 
-# aedat['importParams']['endEvent'] = 1e6;
+# aedat['importParams']['endEvent'] = 3e5;
 
 #aedat['importParams']['filePath'] = './data/ball1.aedat'
 
@@ -75,7 +75,7 @@ else:
 
 aedat = ImportAedat(aedat)
 
-# img = np.zeros(FRAME_DIM)
+#img = np.zeros(FRAME_DIM)
 img = np.full(TARGET_DIM, 0.5)
 
 
@@ -90,9 +90,9 @@ NR_FRAMES = int(len(aedat['data']['polarity']['timeStamp'])/EVENTS_PER_FRAME)
 frame_labels = np.zeros(NR_FRAMES+1)
 
 if EULER:
-    hdf5_name = '../../../scratch/kaenzign/processed/recording' + str(args.recording)
+    hdf5_name = '../../../scratch/kaenzign/processed/dvs_recording' + str(args.recording)
 else:
-    hdf5_name = './data/processed/recording' + str(args.recording)
+    hdf5_name = './data/processed/dvs_recording' + str(args.recording)
 # hdf5_name += '_' + str(int(time.time()))
 if args.tag:
     hdf5_name += '_' + args.tag
@@ -111,8 +111,10 @@ for t,x,y,p in tqdm(zip(aedat['data']['polarity']['timeStamp'], aedat['data']['p
 
     if p==True:
         img[TARGET_DIM[0]-1-x][TARGET_DIM[1]-1-y] += 0.005
+        #img[TARGET_DIM[0]-1-x][TARGET_DIM[1]-1-y] += 1
     else:
         img[TARGET_DIM[0]-1-x][TARGET_DIM[1]-1-y] -= 0.005
+        # img[TARGET_DIM[0]-1-x][TARGET_DIM[1]-1-y] += 1
 
     tmp_frame_timestamps.append(t)
 
@@ -120,10 +122,10 @@ for t,x,y,p in tqdm(zip(aedat['data']['polarity']['timeStamp'], aedat['data']['p
 
     if i%EVENTS_PER_FRAME == 0:
         if SCALE_AND_CLIP:
-            misc.frame_scaling(img)
-            misc.three_sigma_frame_clipping(img)
+            img = misc.three_sigma_frame_clipping(img)
+            img = misc.frame_scaling(img)
 
-        # plt.imshow(img.T, cmap="hot")
+        # plt.imshow(img.T, cmap="gray")
         # filenames.append('./fig' + "noisy_metro_" + str(k) + ".png")
         # plt.savefig('./fig/' + "noisy_metro_" + str(k) + ".png")
 
@@ -152,9 +154,6 @@ for label in d_label:
     else:
         i += 1
 
-
-# TODO: aps frames...
-# TODO: event integration for frame generation?
 
 
 # plt.imshow(img, cmap="hot")

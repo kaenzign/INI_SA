@@ -1,22 +1,43 @@
 import numpy as np
 import h5py
-import keras
+
+# def three_sigma_frame_clipping(frame):
+#     # Compute standard deviation of event-sum distribution
+#     # after removing zeros
+#     sigma = np.std(frame[np.nonzero(frame)])
+#
+#     # Clip number of events per pixel to three-sigma
+#     frame = np.clip(frame, 0, 3*sigma)
+#     return frame
+#
+
+# # scale frame pixel values to [0,1]
+# def frame_scaling(frame):
+#     min_pixel = np.min(frame)
+#     max_pixel = np.max(frame)
+#
+#     frame = (frame - min_pixel) / float((max_pixel - min_pixel))
+#     return frame
 
 def three_sigma_frame_clipping(frame):
     # Compute standard deviation of event-sum distribution
-    # after removing zeros
-    sigma = np.std(frame[np.nonzero(frame)])
+    sigma = np.std(frame)
+    mean = np.mean(frame)
 
-    # Clip number of events per pixel to three-sigma
-    frame = np.clip(frame, 0, 3*sigma)
+    # Clip number of events per pixel to three-sigma, but leave 0.5 entries unchanged as they correspond to zero event counts
+    c_l = mean - 1.5*sigma # TODO: evt use 0.5 instead of mean... less costly and mean is anyways mostly 0.5
+    c_r = mean + 1.5*sigma
+    frame[np.nonzero(frame!=0.5)] = np.clip(frame[np.nonzero(frame!=0.5)], c_l, c_r)
+    return frame
 
 
-# scale frame pixel values to [0,1]
 def frame_scaling(frame):
+    # scale frame pixel values to [0,1], while remain 0.5 values unchanged
     min_pixel = np.min(frame)
     max_pixel = np.max(frame)
 
-    frame = (frame - np.min(frame)) / float((np.max(frame) - np.min(frame)))
+    frame[np.nonzero(frame != 0.5)] = (frame[np.nonzero(frame != 0.5)] - min_pixel) / float((max_pixel - min_pixel))
+    return frame
 
 
 def batch_generator(frames, labels, batch_size, num_epochs, shuffle=False):
@@ -67,6 +88,26 @@ class data_iterator:
             self.cursor += batch_size
             return frames, labels
 
+def to_categorical(y, num_classes=None):
+    """Converts a class vector (integers) to binary class matrix.
+
+    E.g. for use with categorical_crossentropy.
+
+    # Arguments
+        y: class vector to be converted into a matrix
+            (integers from 0 to num_classes).
+        num_classes: total number of classes.
+
+    # Returns
+        A binary matrix representation of the input.
+    """
+    y = np.array(y, dtype='int').ravel()
+    if not num_classes:
+        num_classes = np.max(y) + 1
+    n = y.shape[0]
+    categorical = np.zeros((n, num_classes))
+    categorical[np.arange(n), y] = 1
+    return categorical
 
 def generate_batches_from_hdf5_file(hdf5_file, batch_size, dimensions, num_classes):
     """
@@ -89,11 +130,11 @@ def generate_batches_from_hdf5_file(hdf5_file, batch_size, dimensions, num_class
 
             # and label info. Contains more than one label in my case, e.g. is_dog, is_cat, fur_color,...
             y_values = hdf5_file['labels'][n_entries:n_entries + batch_size]
-            ys = keras.utils.to_categorical(y_values, num_classes)
+            #ys = keras.utils.to_categorical(y_values, num_classes)
+            ys = to_categorical(y_values, num_classes)
 
             # we have read one more batch from this file
             n_entries += batch_size
             yield (xs, ys)
         # hdf5_file.close()
-
 
