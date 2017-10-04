@@ -6,8 +6,7 @@ import misc
 import imageio
 import matplotlib.pyplot as plt
 
-
-EULER = False
+EULER = True
 RESIZE = False
 
 FRAME_DIM = (240,180)
@@ -23,10 +22,14 @@ args = parser.parse_args()
 
 if EULER:
     f_targets = open('../../../scratch/kaenzign/dvs_targets/' + filenames.target_names[args.recording-1])
+    f_aps_timecodes = open('../../../scratch/kaenzign/aps_timecodes/' + 'DAVIS240C-2016-01-11T15-43-32+0000-04010058-0_recording_1_APS-timecode.txt')
+    avi_filename = '../../../scratch/kaenzign/aps_avi/' + 'DAVIS240C-2016-01-11T15-43-32+0000-04010058-0_recording_1_APS.avi'
 else:
     f_targets = open('./data/targets/' + filenames.target_names[args.recording - 1])
+    f_aps_timecodes = open('./data/aps_timecodes/' + 'DAVIS240C-2016-01-11T15-43-32+0000-04010058-0_recording_1_APS-timecode.txt')
+    avi_filename = './data/aps_avi/' + 'DAVIS240C-2016-01-11T15-43-32+0000-04010058-0_recording_1_APS.avi'
 
-f_aps_timecodes = open('./data/aps_timecodes/' + 'DAVIS240C-2016-01-11T15-43-32+0000-04010058-0_recording_1_APS-timecode.txt')
+
 target_lines = f_targets.readlines()
 
 
@@ -85,7 +88,6 @@ for k, t_aps in enumerate(aps_timecodes):
     # print(k, t_aps, target_timestamps[i], aps_labels[k])
 
 
-avi_filename = './data/aps_avi/' + 'DAVIS240C-2016-01-11T15-43-32+0000-04010058-0_recording_1_APS.avi'
 # aps_frames = misc.avi_to_frame_list(avi_filename, gray=True)
 # aps_frames[0][0][0]
 
