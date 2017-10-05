@@ -5,8 +5,9 @@ import h5py
 import misc
 import imageio
 import matplotlib.pyplot as plt
+from scipy.misc import imresize
 
-EULER = True
+EULER = False
 RESIZE = False
 
 FRAME_DIM = (240,180)
@@ -22,12 +23,12 @@ args = parser.parse_args()
 
 if EULER:
     f_targets = open('../../../scratch/kaenzign/dvs_targets/' + filenames.target_names[args.recording-1])
-    f_aps_timecodes = open('../../../scratch/kaenzign/aps_timecodes/' + 'DAVIS240C-2016-01-11T15-43-32+0000-04010058-0_recording_1_APS-timecode.txt')
-    avi_filename = '../../../scratch/kaenzign/aps_avi/' + 'DAVIS240C-2016-01-11T15-43-32+0000-04010058-0_recording_1_APS.avi'
+    f_aps_timecodes = open('../../../scratch/kaenzign/aps_timecodes/' + filenames.aps_timecode_names[args.recording-1])
+    avi_filename = '../../../scratch/kaenzign/aps_avi/' + filenames.aps_avi_names[args.recording-1]
 else:
     f_targets = open('./data/targets/' + filenames.target_names[args.recording - 1])
-    f_aps_timecodes = open('./data/aps_timecodes/' + 'DAVIS240C-2016-01-11T15-43-32+0000-04010058-0_recording_1_APS-timecode.txt')
-    avi_filename = './data/aps_avi/' + 'DAVIS240C-2016-01-11T15-43-32+0000-04010058-0_recording_1_APS.avi'
+    f_aps_timecodes = open('./data/aps_timecodes/' + filenames.aps_timecode_names[args.recording-1])
+    avi_filename = './data/aps_avi/' + filenames.aps_avi_names[args.recording-1]
 
 
 target_lines = f_targets.readlines()
@@ -95,7 +96,10 @@ vid = imageio.get_reader(avi_filename,  'ffmpeg')
 
 for k, image in enumerate(vid.iter_data()):
     #d_img[k] = image
-    d_img[k] = misc.frame_scaling(np.moveaxis(image, 2, 0)[0].T) # RGB image shape (240,180,3) --> (3,240,180) ---> [0] (240,180)
+    if RESIZE:
+        d_img[k] = imresize(misc.aps_frame_scaling(np.moveaxis(image, 2, 0)[0].T), size=(TARGET_DIM), interp='nearest')
+    else:
+        d_img[k] = misc.aps_frame_scaling(np.moveaxis(image, 2, 0)[0].T) # RGB image shape (240,180,3) --> (3,240,180) ---> [0] (240,180)
     # print(image.mean())
 
 #plt.imshow(d_img[k].T, cmap='gray')

@@ -11,13 +11,14 @@ import h5py
 #     return frame
 #
 
-# # scale frame pixel values to [0,1]
-# def frame_scaling(frame):
-#     min_pixel = np.min(frame)
-#     max_pixel = np.max(frame)
-#
-#     frame = (frame - min_pixel) / float((max_pixel - min_pixel))
-#     return frame
+
+def aps_frame_scaling(frame):
+    # scale frame pixel values to [0,1]
+    min_pixel = np.min(frame)
+    max_pixel = np.max(frame)
+
+    frame = (frame - min_pixel) / float((max_pixel - min_pixel))
+    return frame
 
 def three_sigma_frame_clipping(frame):
     # Compute standard deviation of event-sum distribution
@@ -31,7 +32,7 @@ def three_sigma_frame_clipping(frame):
     return frame
 
 
-def frame_scaling(frame):
+def dvs_frame_scaling(frame):
     # scale frame pixel values to [0,1], while remain 0.5 values unchanged
     min_pixel = np.min(frame)
     max_pixel = np.max(frame)
@@ -112,9 +113,6 @@ def to_categorical(y, num_classes=None):
 def generate_batches_from_hdf5_file(hdf5_file, batch_size, dimensions, num_classes):
     """
     Generator that returns batches of images ('xs') and labels ('ys') from a h5 file.
-    :param string filepath: Full filepath of the input h5 file, e.g. '/path/to/file/file.h5'.
-    :param int batchsize: Size of the batches that should be generated.
-    :return: (ndarray, ndarray) (xs, ys): Yields a tuple which contains a full batch of images and labels.
     """
     filesize = len(hdf5_file['labels'])
 

@@ -123,7 +123,7 @@ for t,x,y,p in tqdm(zip(aedat['data']['polarity']['timeStamp'], aedat['data']['p
     if i%EVENTS_PER_FRAME == 0:
         if SCALE_AND_CLIP:
             img = misc.three_sigma_frame_clipping(img)
-            img = misc.frame_scaling(img)
+            img = misc.dvs_frame_scaling(img)
 
         # plt.imshow(img.T, cmap="gray")
         # filenames.append('./fig' + "noisy_metro_" + str(k) + ".png")
