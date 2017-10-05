@@ -21,18 +21,26 @@ epochs = 12
 # input image dimensions
 img_rows, img_cols = 240, 180
 
-hdf5_train = h5py.File("./data/processed/recording6.hdf5",'r')
+hdf5_train = h5py.File("./data/processed/train.hdf5",'r')
+hdf5_test = h5py.File("./data/processed/test.hdf5",'r')
 
-x_test = hdf5_train['images'][-10:] # TODO: load seperate hdf5 file with validation data
-x_test = x_test.reshape(x_test.shape[0], img_rows, img_cols, 1)
-
-y_test = hdf5_train['labels'][-10:]
-y_test = keras.utils.to_categorical(y_test, num_classes)
+# x_test = hdf5_train['images'][-10:] # TODO: load seperate hdf5 file with validation data
+# x_test = x_test.reshape(x_test.shape[0], img_rows, img_cols, 1)
+#
+# y_test = hdf5_train['labels'][-10:]
+# y_test = keras.utils.to_categorical(y_test, num_classes)
 
 train_batches = misc.generate_batches_from_hdf5_file(hdf5_file=hdf5_train,
                                                      batch_size=batch_size,
                                                      dimensions=(batch_size,img_rows,img_cols,1),
-                                                     num_classes=num_classes)
+                                                     num_classes=num_classes,
+                                                     shuffle=True)
+
+test_batches = misc.generate_batches_from_hdf5_file(hdf5_file=hdf5_test,
+                                                    batch_size=batch_size,
+                                                    dimensions=(batch_size,img_rows,img_cols,1),
+                                                    num_classes=num_classes,
+                                                    shuffle=False)
 
 
 model = Sequential()
@@ -67,13 +75,16 @@ model.compile(loss=keras.losses.categorical_crossentropy,
 #     for x_batch, y_batch in train_batches:
 #         model.fit(x_batch, y_batch, batch_size=32, nb_epoch=1)
 
-num_batches_per_epoch = int((len(hdf5_train['labels']) - 1) / batch_size)
+num_train_batches_per_epoch = int((len(hdf5_train['labels']) - 1) / batch_size)
+num_test_batches_per_epoch = int((len(hdf5_test['labels']) - 1) / batch_size)
+
 model.fit_generator(generator=train_batches,
-                    steps_per_epoch=num_batches_per_epoch,
+                    steps_per_epoch=num_train_batches_per_epoch,
                     nb_epoch=epochs,
-                    validation_data=(x_test, y_test))
+                    validation_data=test_batches,
+                    validation_steps=num_test_batches_per_epoch)
 
 
-score = model.evaluate(x_test, y_test, verbose=0)
-print('Test loss:', score[0])
-print('Test accuracy:', score[1])
+# score = model.evaluate(x_test, y_test, verbose=0)
+# print('Test loss:', score[0])
+# print('Test accuracy:', score[1])

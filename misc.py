@@ -104,35 +104,45 @@ def to_categorical(y, num_classes=None):
     """
     y = np.array(y, dtype='int').ravel()
     if not num_classes:
-        num_classes = np.max(y) + 1
+        num_classes = np.max(y)
     n = y.shape[0]
     categorical = np.zeros((n, num_classes))
-    categorical[np.arange(n), y] = 1
+    categorical[np.arange(n), y-1] = 1 # -1 because labels start at 1 not at 0
     return categorical
 
-def generate_batches_from_hdf5_file(hdf5_file, batch_size, dimensions, num_classes):
+def generate_batches_from_hdf5_file(hdf5_file, batch_size, dimensions, num_classes, shuffle):
     """
     Generator that returns batches of images ('xs') and labels ('ys') from a h5 file.
     """
-    filesize = len(hdf5_file['labels'])
+    data_size = len(hdf5_file['labels'])
+    indices = np.arange(data_size)
 
     while 1:
+        if shuffle:
+            indices = np.random.permutation(indices)
+
         # count how many entries we have read
         n_entries = 0
         # as long as we haven't read all entries from the file: keep reading
-        while n_entries < (filesize - batch_size):
+        while n_entries < (data_size - batch_size):
             # start the next batch at index 0
             # create numpy arrays of input data (features)
-            xs = hdf5_file['images'][n_entries: n_entries + batch_size]
+            if shuffle:
+                # indices have to be in increasing order for hdf5 access (unlike numpy...)
+                batch_indices = sorted(indices[n_entries: n_entries + batch_size])
+            else:
+                batch_indices = indices[n_entries: n_entries + batch_size]
+
+            xs = hdf5_file['images'][batch_indices]
             xs = np.reshape(xs, dimensions).astype('float32')
 
-            # and label info. Contains more than one label in my case, e.g. is_dog, is_cat, fur_color,...
-            y_values = hdf5_file['labels'][n_entries:n_entries + batch_size]
+            y_values = hdf5_file['labels'][batch_indices]
             #ys = keras.utils.to_categorical(y_values, num_classes)
             ys = to_categorical(y_values, num_classes)
 
             # we have read one more batch from this file
             n_entries += batch_size
             yield (xs, ys)
+
         # hdf5_file.close()
 

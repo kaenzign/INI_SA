@@ -38,6 +38,7 @@ lines = inputfile.readlines()
 timestamps = []
 labels = []
 
+# note labels start at 1 not at 0 --> can't use standard keras to_categorigal fct later..
 for line in lines:
     line = line.strip()
     if line[0] == '#':

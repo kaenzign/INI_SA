@@ -7,7 +7,7 @@ import imageio
 import matplotlib.pyplot as plt
 from scipy.misc import imresize
 
-EULER = False
+EULER = True
 RESIZE = False
 
 FRAME_DIM = (240,180)
