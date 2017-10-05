@@ -6,34 +6,56 @@ processed_path = './data/processed/'
 filenames = [f for f in listdir(processed_path) if isfile(join(processed_path, f))]
 
 
-train_output_file = h5py.File('./data/train.hdf5', 'w')
+train_output_file = h5py.File('./data/processed/train.hdf5', 'w')
+test_output_file = h5py.File('./data/processed/test.hdf5', 'w')
 
 
 #keep track of the total number of of frames
 nr_frames = 0
+tot_nr_train_frames = 0
+tot_nr_test_frames = 0
+
+# filenames = [filenames[0], filenames[1]] # TODO: remove.. just for local debug
 
 for n, filename in enumerate(filenames):
+    print('PROCESSING FILE ' + str(n) + ' ' + filename)
     file_path = processed_path + filename
     hdf5_f = h5py.File(file_path,'r')
-    nr_frames += hdf5_f['images'].shape[0]
+
+    current_nr_frames = hdf5_f['images'].shape[0]
+    current_nr_test_frames = int(0.2*current_nr_frames)
+    current_nr_train_frames = current_nr_frames - current_nr_test_frames
+    tot_nr_test_frames += current_nr_test_frames
+    tot_nr_train_frames += current_nr_train_frames
 
     if n == 0:
         #first file; create the dummy dataset with no max shape
         FRAME_DIM = (hdf5_f['images'].shape[1], hdf5_f['images'].shape[2])
-        image_dataset = train_output_file.create_dataset("images", (nr_frames, FRAME_DIM[0], FRAME_DIM[1]), maxshape=(None, FRAME_DIM[0], FRAME_DIM[1]))
-        label_dataset = train_output_file.create_dataset("labels", (nr_frames, ), maxshape=(None, ))
+        train_image_dataset = train_output_file.create_dataset("images", (tot_nr_train_frames, FRAME_DIM[0], FRAME_DIM[1]), maxshape=(None, FRAME_DIM[0], FRAME_DIM[1]))
+        train_label_dataset = train_output_file.create_dataset("labels", (tot_nr_train_frames, ), maxshape=(None, ))
+        test_image_dataset = test_output_file.create_dataset("images", (tot_nr_test_frames, FRAME_DIM[0], FRAME_DIM[1]), maxshape=(None, FRAME_DIM[0], FRAME_DIM[1]))
+        test_label_dataset = test_output_file.create_dataset("labels", (tot_nr_test_frames, ), maxshape=(None, ))
         #fill the first section of the dataset
-        image_dataset[:] = hdf5_f['images'][:]
-        label_dataset[:] = hdf5_f['labels'][:]
-        where_to_start_appending = nr_frames
+        train_image_dataset[:] = hdf5_f['images'][:current_nr_train_frames]
+        train_label_dataset[:] = hdf5_f['labels'][:current_nr_train_frames]
+        test_image_dataset[:] = hdf5_f['images'][-current_nr_test_frames:]
+        test_label_dataset[:] = hdf5_f['labels'][-current_nr_test_frames:]
+        where_to_append_train = tot_nr_train_frames
+        where_to_append_test = tot_nr_test_frames
 
     else:
         #resize the dataset to accomodate the new data
-        image_dataset.resize(nr_frames, axis=0)
-        label_dataset.resize(nr_frames, axis=0)
+        train_image_dataset.resize(tot_nr_train_frames, axis=0)
+        train_label_dataset.resize(tot_nr_train_frames, axis=0)
+        test_image_dataset.resize(tot_nr_test_frames, axis=0)
+        test_label_dataset.resize(tot_nr_test_frames, axis=0)
 
-        image_dataset[where_to_start_appending:nr_frames] = hdf5_f['images'][:]
-        label_dataset[where_to_start_appending:nr_frames] = hdf5_f['labels'][:]
-        where_to_start_appending = nr_frames
+        train_image_dataset[where_to_append_train:tot_nr_train_frames] = hdf5_f['images'][:current_nr_train_frames]
+        train_label_dataset[where_to_append_train:tot_nr_train_frames] = hdf5_f['labels'][:current_nr_train_frames]
+        test_image_dataset[where_to_append_test:tot_nr_test_frames] = hdf5_f['images'][-current_nr_test_frames:]
+        test_label_dataset[where_to_append_test:tot_nr_test_frames] = hdf5_f['labels'][-current_nr_test_frames:]
+        where_to_append_train = tot_nr_train_frames
+        where_to_append_test = tot_nr_test_frames
 
-output_file.close()
+train_output_file.close()
+hdf5_f.close()
