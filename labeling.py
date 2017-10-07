@@ -32,7 +32,7 @@ if EULER:
 else:
     inputfile = open('./data/targets/' + filenames.target_names[args.recording - 1])
 
-lines = inputfile.readlines()
++lines = inputfile.readlines()
 
 
 timestamps = []
@@ -64,14 +64,12 @@ aedat['importParams'] = {}
 aedat['info'] = {}
 
 # aedat['importParams']['endEvent'] = 3e5;
-
-#aedat['importParams']['filePath'] = './data/ball1.aedat'
+# aedat['importParams']['filePath'] = './data/ball1.aedat'
 
 if EULER:
     aedat['importParams']['filePath'] = '../../../scratch/kaenzign/aedat/' + filenames.aedat_names[args.recording-1]
 else:
     aedat['importParams']['filePath'] = './data/aedat/' + filenames.aedat_names[args.recording - 1]
-
 
 
 aedat = ImportAedat(aedat)
@@ -147,6 +145,7 @@ for t,x,y,p in tqdm(zip(aedat['data']['polarity']['timeStamp'], aedat['data']['p
         img = np.full(TARGET_DIM, 0.5)
         k += 1
 
+
 # Fill up the labels of the first frames
 i=0
 for label in d_label:
@@ -154,7 +153,6 @@ for label in d_label:
         d_label[:i] = label
     else:
         i += 1
-
 
 
 # plt.imshow(img, cmap="hot")

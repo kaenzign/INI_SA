@@ -2,12 +2,17 @@ import h5py
 from os import listdir
 from os.path import isfile, join
 
-processed_path = './data/processed/'
+EULER = True
+
+if EULER:
+    processed_path = '../../../scratch/kaenzign/processed/'
+else:
+    processed_path = './data/processed/'
 filenames = [f for f in listdir(processed_path) if isfile(join(processed_path, f))]
 
 
-train_output_file = h5py.File('./data/processed/train.hdf5', 'w')
-test_output_file = h5py.File('./data/processed/test.hdf5', 'w')
+train_output_file = h5py.File(processed_path + 'train.hdf5', 'w')
+test_output_file = h5py.File(processed_path + 'test.hdf5', 'w')
 
 
 #keep track of the total number of of frames
@@ -57,5 +62,5 @@ for n, filename in enumerate(filenames):
         where_to_append_train = tot_nr_train_frames
         where_to_append_test = tot_nr_test_frames
 
-train_output_file.close()
-hdf5_f.close()
+# train_output_file.close()
+# hdf5_f.close()
