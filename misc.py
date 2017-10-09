@@ -131,7 +131,7 @@ def generate_batches_from_hdf5_file(hdf5_file, batch_size, dimensions, num_class
                 # indices have to be in increasing order for hdf5 access (unlike numpy...)
                 batch_indices = sorted(indices[n_entries: n_entries + batch_size])
             else:
-                batch_indices = indices[n_entries: n_entries + batch_size]
+                batch_indices = list(indices[n_entries: n_entries + batch_size])
 
             xs = hdf5_file['images'][batch_indices]
             xs = np.reshape(xs, dimensions).astype('float32')

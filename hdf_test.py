@@ -4,7 +4,7 @@ import h5py
 
 RECORDING_NR = 1
 
-hdf5_path = './data/processed/your_output_file' + '.hdf5'
+hdf5_path = './data/processed/aps_recording1_36x36.hdf5'
 
 hdf5_f = h5py.File(hdf5_path,'r')
 

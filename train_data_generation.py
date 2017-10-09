@@ -8,6 +8,9 @@ if EULER:
     processed_path = '../../../scratch/kaenzign/processed/'
 else:
     processed_path = './data/processed/'
+
+processed_path += 'aps_36/'
+
 filenames = [f for f in listdir(processed_path) if isfile(join(processed_path, f))]
 
 
@@ -62,5 +65,5 @@ for n, filename in enumerate(filenames):
         where_to_append_train = tot_nr_train_frames
         where_to_append_test = tot_nr_test_frames
 
-# train_output_file.close()
-# hdf5_f.close()
+train_output_file.close()
+hdf5_f.close()

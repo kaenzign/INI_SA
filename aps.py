@@ -8,11 +8,11 @@ import matplotlib.pyplot as plt
 from scipy.misc import imresize
 
 EULER = True
-RESIZE = False
+RESIZE = True
 
 FRAME_DIM = (240,180)
 if RESIZE:
-    TARGET_DIM = (72,72)
+    TARGET_DIM = (36,36)
 else:
     TARGET_DIM = FRAME_DIM
 
@@ -70,6 +70,8 @@ if EULER:
 else:
     hdf5_name = './data/processed/aps_recording' + str(args.recording)
 # hdf5_name += '_' + str(int(time.time()))
+if RESIZE:
+    hdf5_name += '_' + str(TARGET_DIM[0]) + 'x' + str(TARGET_DIM[1])
 if args.tag:
     hdf5_name += '_' + args.tag
 hdf5_name += '.hdf5'
@@ -82,7 +84,7 @@ d_label = f.create_dataset("labels", (NR_FRAMES,), dtype='i')
 i = 0
 k = 0
 for k, t_aps in enumerate(aps_timecodes):
-    while t_aps > target_timestamps[i]:
+    while (t_aps > target_timestamps[i]) and (t_aps < target_timestamps[-1]):
         i += 1
 
     d_label[k] = labels[i]

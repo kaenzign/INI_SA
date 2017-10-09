@@ -1,9 +1,3 @@
-'''Trains a simple convnet on the MNIST dataset.
-Gets to 99.25% test accuracy after 12 epochs
-(there is still a lot of margin for parameter tuning).
-16 seconds per epoch on a GRID K520 GPU.
-'''
-
 from __future__ import print_function
 import keras
 from keras.datasets import mnist
@@ -13,16 +7,29 @@ from keras.layers import Conv2D, MaxPooling2D
 from keras import backend as K
 import h5py
 import misc
+import matplotlib.pyplot as plt
+import json
 
-batch_size = 8
+
+
+EULER = True
+batch_size = 32
 num_classes = 4
-epochs = 12
+epochs = 30
+
 
 # input image dimensions
-img_rows, img_cols = 240, 180
+img_rows, img_cols = 36, 36
 
-hdf5_train = h5py.File("./data/processed/train.hdf5",'r')
-hdf5_test = h5py.File("./data/processed/test.hdf5",'r')
+if EULER:
+    processed_path = '../../../scratch/kaenzign/processed/'
+else:
+    processed_path = './data/processed/'
+
+processed_path += 'aps_36/'
+
+hdf5_train = h5py.File(processed_path + 'train.hdf5','r')
+hdf5_test = h5py.File(processed_path + 'test.hdf5','r')
 
 # x_test = hdf5_train['images'][-10:] # TODO: load seperate hdf5 file with validation data
 # x_test = x_test.reshape(x_test.shape[0], img_rows, img_cols, 1)
@@ -41,6 +48,7 @@ test_batches = misc.generate_batches_from_hdf5_file(hdf5_file=hdf5_test,
                                                     dimensions=(batch_size,img_rows,img_cols,1),
                                                     num_classes=num_classes,
                                                     shuffle=False)
+
 
 
 model = Sequential()
@@ -78,11 +86,43 @@ model.compile(loss=keras.losses.categorical_crossentropy,
 num_train_batches_per_epoch = int((len(hdf5_train['labels']) - 1) / batch_size)
 num_test_batches_per_epoch = int((len(hdf5_test['labels']) - 1) / batch_size)
 
-model.fit_generator(generator=train_batches,
+history = model.fit_generator(generator=train_batches,
                     steps_per_epoch=num_train_batches_per_epoch,
                     nb_epoch=epochs,
                     validation_data=test_batches,
                     validation_steps=num_test_batches_per_epoch)
+
+
+model_dir = './model/mdl'
+model.save(model_dir)
+
+# list all data in history
+print(history.history.keys())
+
+with open('./model/history.json', 'w') as f:
+    json.dump(history.history, f)
+
+# elsewhere...
+
+# with open('./model/my_dict.json') as f:
+#     my_dict = json.load(f)
+
+# summarize history for accuracy
+# plt.plot(history.history['acc'])
+# plt.plot(history.history['val_acc'])
+# plt.title('model accuracy')
+# plt.ylabel('accuracy')
+# plt.xlabel('epoch')
+# plt.legend(['train', 'test'], loc='upper left')
+# plt.show()
+# # summarize history for loss
+# plt.plot(history.history['loss'])
+# plt.plot(history.history['val_loss'])
+# plt.title('model loss')
+# plt.ylabel('loss')
+# plt.xlabel('epoch')
+# plt.legend(['train', 'test'], loc='upper left')
+# plt.show()
 
 
 # score = model.evaluate(x_test, y_test, verbose=0)

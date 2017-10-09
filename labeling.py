@@ -16,12 +16,12 @@ args = parser.parse_args()
 print('PROCESSING RECORDING NR. ' + str(args.recording))
 
 EULER = True
-RESIZE = False
+RESIZE = True
 SCALE_AND_CLIP = True
 EVENTS_PER_FRAME = 5000
 FRAME_DIM = (240,180)
 if RESIZE:
-    TARGET_DIM = (72,72)
+    TARGET_DIM = (36,36)
 else:
     TARGET_DIM = FRAME_DIM
 
@@ -32,7 +32,7 @@ if EULER:
 else:
     inputfile = open('./data/targets/' + filenames.target_names[args.recording - 1])
 
-+lines = inputfile.readlines()
+lines = inputfile.readlines()
 
 
 timestamps = []
@@ -64,7 +64,6 @@ aedat['importParams'] = {}
 aedat['info'] = {}
 
 # aedat['importParams']['endEvent'] = 3e5;
-# aedat['importParams']['filePath'] = './data/ball1.aedat'
 
 if EULER:
     aedat['importParams']['filePath'] = '../../../scratch/kaenzign/aedat/' + filenames.aedat_names[args.recording-1]
@@ -74,7 +73,7 @@ else:
 
 aedat = ImportAedat(aedat)
 
-#img = np.zeros(FRAME_DIM)
+#img = np.zeros(TARGET_DIM)
 img = np.full(TARGET_DIM, 0.5)
 
 
@@ -92,6 +91,8 @@ if EULER:
     hdf5_name = '../../../scratch/kaenzign/processed/dvs_recording' + str(args.recording)
 else:
     hdf5_name = './data/processed/dvs_recording' + str(args.recording)
+if RESIZE:
+    hdf5_name += '_' + str(TARGET_DIM[0]) + 'x' + str(TARGET_DIM[1])
 # hdf5_name += '_' + str(int(time.time()))
 if args.tag:
     hdf5_name += '_' + args.tag
