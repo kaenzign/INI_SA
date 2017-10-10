@@ -2,14 +2,14 @@ import h5py
 from os import listdir
 from os.path import isfile, join
 
-EULER = True
+EULER = False
 
 if EULER:
     processed_path = '../../../scratch/kaenzign/processed/'
 else:
     processed_path = './data/processed/'
 
-processed_path += 'aps_36/'
+# processed_path += 'aps_36/'
 
 filenames = [f for f in listdir(processed_path) if isfile(join(processed_path, f))]
 

@@ -7,16 +7,18 @@ from keras.layers import Conv2D, MaxPooling2D
 from keras import backend as K
 import h5py
 import misc
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import json
+import os
 
 
-
+MODEL_TAG = 'dvs'
 EULER = True
-batch_size = 32
-num_classes = 4
-epochs = 30
+TENSORBOARD = False
 
+batch_size = 8
+num_classes = 4
+epochs = 5
 
 # input image dimensions
 img_rows, img_cols = 36, 36
@@ -26,7 +28,7 @@ if EULER:
 else:
     processed_path = './data/processed/'
 
-processed_path += 'aps_36/'
+processed_path += 'dvs_36/'
 
 hdf5_train = h5py.File(processed_path + 'train.hdf5','r')
 hdf5_test = h5py.File(processed_path + 'test.hdf5','r')
@@ -61,8 +63,8 @@ model.add(MaxPooling2D(pool_size=(2, 2)))
 model.add(Flatten())
 model.add(Dense(40, activation='relu'))
 model.add(Dropout(0.25))
-#model.add(Dense(num_classes))
 model.add(Dense(num_classes, activation='softmax'))
+
 # model.add(Conv2D(32, kernel_size=(3, 3),
 #                  activation='relu',
 #                  input_shape=(img_rows, img_cols, 1)))
@@ -86,20 +88,38 @@ model.compile(loss=keras.losses.categorical_crossentropy,
 num_train_batches_per_epoch = int((len(hdf5_train['labels']) - 1) / batch_size)
 num_test_batches_per_epoch = int((len(hdf5_test['labels']) - 1) / batch_size)
 
+if MODEL_TAG != '':
+    log_dir = './log/' + MODEL_TAG + '/'
+    model_dir = './model/'+ MODEL_TAG + '/'
+else:
+    log_dir = './log'
+    model_dir = './model/'
+
+if TENSORBOARD:
+    cb = keras.callbacks.TensorBoard(log_dir=log_dir,
+                     write_graph=True,
+                     write_images=False)
+    tensorboard = [cb]
+else:
+    tensorboard = None
+# tensorboard --logdir=./logs
+
 history = model.fit_generator(generator=train_batches,
                     steps_per_epoch=num_train_batches_per_epoch,
                     nb_epoch=epochs,
                     validation_data=test_batches,
-                    validation_steps=num_test_batches_per_epoch)
+                    validation_steps=num_test_batches_per_epoch,
+                    callbacks=tensorboard)
 
 
-model_dir = './model/mdl'
-model.save(model_dir)
+if not os.path.exists(model_dir):
+    os.makedirs(model_dir)
+model.save(model_dir + 'mdl.h5')
 
 # list all data in history
 print(history.history.keys())
 
-with open('./model/history.json', 'w') as f:
+with open(model_dir + 'history.json', 'w') as f:
     json.dump(history.history, f)
 
 # elsewhere...
