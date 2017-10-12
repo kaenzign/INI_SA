@@ -5,10 +5,12 @@ import h5py
 import misc
 import imageio
 import matplotlib.pyplot as plt
+from matplotlib.colors import NoNorm
 from scipy.misc import imresize
 
 EULER = True
 RESIZE = True
+EXPOSE = True
 
 FRAME_DIM = (240,180)
 if RESIZE:
@@ -72,23 +74,35 @@ else:
 # hdf5_name += '_' + str(int(time.time()))
 if RESIZE:
     hdf5_name += '_' + str(TARGET_DIM[0]) + 'x' + str(TARGET_DIM[1])
+if EXPOSE:
+    hdf5_name += '_' + 'exp'
 if args.tag:
     hdf5_name += '_' + args.tag
 hdf5_name += '.hdf5'
 
 f = h5py.File(hdf5_name, "w")
 NR_FRAMES = len(aps_timecodes)
+
+if EXPOSE:
+    NR_FRAMES = NR_FRAMES*3
 d_img = f.create_dataset("images", (NR_FRAMES,TARGET_DIM[0],TARGET_DIM[1]), dtype='f')
 d_label = f.create_dataset("labels", (NR_FRAMES,), dtype='i')
 
 i = 0
 k = 0
-for k, t_aps in enumerate(aps_timecodes):
+for t_aps in aps_timecodes:
     while (t_aps > target_timestamps[i]) and (t_aps < target_timestamps[-1]):
         i += 1
 
-    d_label[k] = labels[i]
+    if EXPOSE:
+        d_label[k:k+3] = labels[i]
+        k += 3
+    else:
+        d_label[k] = labels[i]
+        k += 1
     # print(k, t_aps, target_timestamps[i], aps_labels[k])
+
+
 
 
 # aps_frames = misc.avi_to_frame_list(avi_filename, gray=True)
@@ -96,15 +110,31 @@ for k, t_aps in enumerate(aps_timecodes):
 
 vid = imageio.get_reader(avi_filename,  'ffmpeg')
 
-for k, image in enumerate(vid.iter_data()):
+k = 0
+for image in vid.iter_data():
     #d_img[k] = image
     if RESIZE:
-        d_img[k] = imresize(misc.aps_frame_scaling(np.moveaxis(image, 2, 0)[0].T), size=(TARGET_DIM), interp='nearest')
+        img = imresize(misc.aps_frame_scaling(np.moveaxis(image, 2, 0)[0].T), size=(TARGET_DIM), interp='nearest')
+        img = misc.aps_frame_scaling(img)
     else:
-        d_img[k] = misc.aps_frame_scaling(np.moveaxis(image, 2, 0)[0].T) # RGB image shape (240,180,3) --> (3,240,180) ---> [0] (240,180)
+        img = misc.aps_frame_scaling(np.moveaxis(image, 2, 0)[0].T) # RGB image shape (240,180,3) --> (3,240,180) ---> [0] (240,180)
+    if EXPOSE:
+        img_u = 0.3*img
+        img_o = 2*img
+        img_o[np.nonzero(img_o > 1)] = 1 # clip values bigger than 1
+
+        d_img[k] = img
+        d_img[k+1] = img_u
+        d_img[k+2] = img_o
+
+        k += 3
+    else:
+        d_img[k] = img
+        k += 1
+
     # print(image.mean())
 
-#plt.imshow(d_img[k].T, cmap='gray')
+# plt.imshow((img).T, cmap='gray', norm=NoNorm(vmin=0, vmax=1, clip=True))
 
 i=0
 

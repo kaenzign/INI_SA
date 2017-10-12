@@ -3,7 +3,7 @@ from os import listdir
 from os.path import isfile, join
 
 EULER = False
-MODE = 'dvs' # leave this string empty to process both dvs and aps, else set MODE='dvs' or MODE= 'aps'
+MODE = '' # leave this string empty to process both dvs and aps, else set MODE='dvs' or MODE= 'aps'
 
 if EULER:
     processed_path = '../../../scratch/kaenzign/processed/'
@@ -71,4 +71,8 @@ for n, filename in enumerate(filenames):
         where_to_append_test = tot_nr_test_frames
 
 train_output_file.close()
+
+print(MODE + ' Train images: ' + str(tot_nr_train_frames))
+print(MODE + ' Test images: ' + str(tot_nr_test_frames))
+print(MODE + ' Total images: ' + str(tot_nr_train_frames + tot_nr_test_frames))
 # hdf5_f.close()
