@@ -15,6 +15,7 @@ import os
 MODEL_TAG = 'dvs'
 EULER = True
 TENSORBOARD = False
+CHECKPOINTS = True
 
 batch_size = 8
 num_classes = 4
@@ -96,20 +97,30 @@ else:
     model_dir = './model/'
 
 if TENSORBOARD:
-    cb = keras.callbacks.TensorBoard(log_dir=log_dir,
+    tensorboard_cb = keras.callbacks.TensorBoard(log_dir=log_dir,
                      write_graph=True,
                      write_images=False)
-    tensorboard = [cb]
+    callbacks = [tensorboard_cb]
 else:
-    tensorboard = None
+    callbacks = None
 # tensorboard --logdir=./logs
+
+if not os.path.exists(model_dir):
+    os.makedirs(model_dir)
+
+if CHECKPOINTS:
+    model_checkpoints = keras.callbacks.ModelCheckpoint(model_dir + 'weights.{epoch:02d}-{val_loss:.2f}.h5')
+    if callbacks == None:
+        callbacks = [model_checkpoints]
+    else:
+        callbacks.append(model_checkpoints)
 
 history = model.fit_generator(generator=train_batches,
                     steps_per_epoch=num_train_batches_per_epoch,
                     nb_epoch=epochs,
                     validation_data=test_batches,
                     validation_steps=num_test_batches_per_epoch,
-                    callbacks=tensorboard)
+                    callbacks=callbacks)
 
 
 if not os.path.exists(model_dir):

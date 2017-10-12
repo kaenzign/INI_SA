@@ -3,6 +3,7 @@ from os import listdir
 from os.path import isfile, join
 
 EULER = False
+MODE = 'dvs' # leave this string empty to process both dvs and aps, else set MODE='dvs' or MODE= 'aps'
 
 if EULER:
     processed_path = '../../../scratch/kaenzign/processed/'
@@ -23,9 +24,12 @@ nr_frames = 0
 tot_nr_train_frames = 0
 tot_nr_test_frames = 0
 
-# filenames = [filenames[0], filenames[1]] # TODO: remove.. just for local debug
-
+first = True
 for n, filename in enumerate(filenames):
+    if MODE not in filename:
+        print('skipped file ' + filename)
+        continue
+
     print('PROCESSING FILE ' + str(n) + ' ' + filename)
     file_path = processed_path + filename
     hdf5_f = h5py.File(file_path,'r')
@@ -36,7 +40,7 @@ for n, filename in enumerate(filenames):
     tot_nr_test_frames += current_nr_test_frames
     tot_nr_train_frames += current_nr_train_frames
 
-    if n == 0:
+    if first:
         #first file; create the dummy dataset with no max shape
         FRAME_DIM = (hdf5_f['images'].shape[1], hdf5_f['images'].shape[2])
         train_image_dataset = train_output_file.create_dataset("images", (tot_nr_train_frames, FRAME_DIM[0], FRAME_DIM[1]), maxshape=(None, FRAME_DIM[0], FRAME_DIM[1]))
@@ -50,6 +54,7 @@ for n, filename in enumerate(filenames):
         test_label_dataset[:] = hdf5_f['labels'][-current_nr_test_frames:]
         where_to_append_train = tot_nr_train_frames
         where_to_append_test = tot_nr_test_frames
+        first = False
 
     else:
         #resize the dataset to accomodate the new data
@@ -66,4 +71,4 @@ for n, filename in enumerate(filenames):
         where_to_append_test = tot_nr_test_frames
 
 train_output_file.close()
-hdf5_f.close()
+# hdf5_f.close()
