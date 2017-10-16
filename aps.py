@@ -7,10 +7,11 @@ import imageio
 import matplotlib.pyplot as plt
 from matplotlib.colors import NoNorm
 from scipy.misc import imresize
+from skimage.transform import rescale, resize
 
 EULER = True
 RESIZE = True
-EXPOSE = True
+EXPOSE = False
 
 FRAME_DIM = (240,180)
 if RESIZE:
@@ -28,7 +29,7 @@ if EULER:
     f_aps_timecodes = open('../../../scratch/kaenzign/aps_timecodes/' + filenames.aps_timecode_names[args.recording-1])
     avi_filename = '../../../scratch/kaenzign/aps_avi/' + filenames.aps_avi_names[args.recording-1]
 else:
-    f_targets = open('./data/targets/' + filenames.target_names[args.recording - 1])
+    f_targets = open('./data/dvs_targets/' + filenames.target_names[args.recording - 1])
     f_aps_timecodes = open('./data/aps_timecodes/' + filenames.aps_timecode_names[args.recording-1])
     avi_filename = './data/aps_avi/' + filenames.aps_avi_names[args.recording-1]
 
@@ -103,8 +104,6 @@ for t_aps in aps_timecodes:
     # print(k, t_aps, target_timestamps[i], aps_labels[k])
 
 
-
-
 # aps_frames = misc.avi_to_frame_list(avi_filename, gray=True)
 # aps_frames[0][0][0]
 
@@ -114,8 +113,9 @@ k = 0
 for image in vid.iter_data():
     #d_img[k] = image
     if RESIZE:
-        img = imresize(misc.aps_frame_scaling(np.moveaxis(image, 2, 0)[0].T), size=(TARGET_DIM), interp='nearest')
-        img = misc.aps_frame_scaling(img)
+        # img = imresize(misc.aps_frame_scaling(np.moveaxis(image, 2, 0)[0].T), size=(TARGET_DIM), interp='nearest')
+        # img = misc.aps_frame_scaling(img)
+        img = resize(np.moveaxis(image, 2, 0)[0].T, TARGET_DIM)  # also scales the images to [0,1]!
     else:
         img = misc.aps_frame_scaling(np.moveaxis(image, 2, 0)[0].T) # RGB image shape (240,180,3) --> (3,240,180) ---> [0] (240,180)
     if EXPOSE:

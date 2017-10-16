@@ -20,6 +20,7 @@ def aps_frame_scaling(frame):
     frame = (frame - min_pixel) / float((max_pixel - min_pixel))
     return frame
 
+
 def three_sigma_frame_clipping(frame):
     # Compute standard deviation of event-sum distribution
     sigma = np.std(frame)

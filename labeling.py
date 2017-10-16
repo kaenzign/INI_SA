@@ -15,8 +15,8 @@ args = parser.parse_args()
 
 print('PROCESSING RECORDING NR. ' + str(args.recording))
 
-EULER = True
-RESIZE = True
+EULER = False
+RESIZE = False
 SCALE_AND_CLIP = True
 EVENTS_PER_FRAME = 5000
 FRAME_DIM = (240,180)
@@ -30,7 +30,7 @@ dim_scale = [FRAME_DIM[0]/float(TARGET_DIM[0]), FRAME_DIM[1]/float(TARGET_DIM[1]
 if EULER:
     inputfile = open('../../../scratch/kaenzign/dvs_targets/' + filenames.target_names[args.recording-1])
 else:
-    inputfile = open('./data/targets/' + filenames.target_names[args.recording - 1])
+    inputfile = open('./data/dvs_targets/' + filenames.target_names[args.recording - 1])
 
 lines = inputfile.readlines()
 
@@ -63,7 +63,7 @@ aedat = {}
 aedat['importParams'] = {}
 aedat['info'] = {}
 
-# aedat['importParams']['endEvent'] = 3e5;
+aedat['importParams']['endEvent'] = 3e5;
 
 if EULER:
     aedat['importParams']['filePath'] = '../../../scratch/kaenzign/aedat/' + filenames.aedat_names[args.recording-1]
