@@ -10,9 +10,9 @@ test_h5 = h5py.File(test_data_path,'r')
 
 random_indexes = sorted(np.random.randint(0, test_h5['images'].shape[0], size=NR_SAMPLES))
 
-x_test = test_h5['images'][random_indexes]
+x_test = np.array(test_h5['images'])[random_indexes]
 x_test = x_test.reshape(x_test.shape[0], x_test.shape[1], x_test.shape[2], 1)
-y_test = test_h5['labels'][random_indexes]
+y_test = np.array(test_h5['labels'])[random_indexes]
 y_test = misc.to_categorical(y_test)
 
 np.savez(file='x_test', arr_0=x_test)
