@@ -15,9 +15,10 @@ args = parser.parse_args()
 
 print('PROCESSING RECORDING NR. ' + str(args.recording))
 
-EULER = True
+EULER = False
 EVENTS_PER_FRAME = 5000
 TEST_FRACTION  = 0.2
+NR_FRAME_DIV = None # set to None to extract all frames, set to value in (0,1) to select the fraction of the test set to be used
 EVT_DVS = 0  # DVS event type
 EVT_APS = 1 # APS event
 
@@ -164,8 +165,14 @@ def extract_k_random_frames(aedat_file, nr_frames, frame_size, k):
     dvs_h5 = h5py.File(hdf5_name, 'r')
 
     if k == None or k > nr_frames:
+        # use all frames
         k = nr_frames
-    frame_indexes = np.random.randint(nr_frames, size=k)
+        frame_indexes = np.arange(nr_frames)
+    else:
+        # use a subset of the frames
+        # frame_indexes = np.random.randint(nr_frames, size=k)
+        frame_indexes = np.arange(start=nr_frames, step=int(nr_frames/k), dtype=int)
+
     labels = dvs_h5['labels'][-nr_frames:]
     labels = labels[frame_indexes]
 
@@ -206,13 +213,20 @@ def extract_k_random_frames(aedat_file, nr_frames, frame_size, k):
 start_time = time.time()
 # check_target(aedat_file, target_file)
 
-extract_DVS_events(aedat_file, full_target_file)
+# extract_DVS_events(aedat_file, full_target_file)
 
 nr_events = write_test_aedat(full_target_file, test_target_file, TEST_FRACTION)
 nr_frames = int(nr_events/EVENTS_PER_FRAME)
 
-frame_indexes = extract_k_random_frames(test_target_file, nr_frames, 5000, None)
+if NR_FRAME_DIV != None:
+    k = int(NR_FRAME_DIV*nr_frames)
+else:
+    k = nr_frames
+
+frame_indexes = extract_k_random_frames(test_target_file, nr_frames, 5000, k)
 
 # extract_DVS_labels(nr_frames, frame_indexes)
 
+print('total number of frames: ' + str(nr_frames))
+print('extracted number of frames: ' + str(k))
 print("--- %s seconds ---" % (time.time() - start_time))
