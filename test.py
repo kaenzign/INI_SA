@@ -3,14 +3,13 @@ from keras.models import load_model
 import h5py
 import misc
 import numpy as np
-import misc
+import time
 
-
-MODEL = 'mdl500_APS_shuffle_2ndMod'
-model_path = './model/' + MODEL
+MODEL = 'weights.30-0.38.h5'
+model_path = './model/aps36_B32_60E_exp_nr/' + MODEL
 
 TESTFILE = 'test.hdf5'
-test_data_path = './data/processed/' + TESTFILE
+test_data_path = './data/processed/aps_36_exp_newresize/' + TESTFILE
 
 img_rows = 36
 img_cols = 36
@@ -28,7 +27,11 @@ y = misc.to_categorical(y, 4)
 
 model = load_model(model_path)
 
+start_time = time.time()
 predictions = model.predict(x)
+delta_t = (time.time() - start_time)/x.shape[0]
+print("--- Prediction took %s seconds ---" % delta_t)
+
 np.argmax(predictions, axis=1)
 
 correct_predictions = np.sum(np.argmax(predictions, axis=1) == np.argmax(y, axis=1))

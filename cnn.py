@@ -2,9 +2,10 @@ from __future__ import print_function
 import keras
 from keras.datasets import mnist
 from keras.models import Sequential
-from keras.layers import Dense, Dropout, Flatten
-from keras.layers import Conv2D, MaxPooling2D
-from keras import backend as K
+from keras.layers import Dense, Dropout, Flatten, Activation
+from keras.layers import Conv2D, MaxPooling2D, AveragePooling2D
+from keras.layers.normalization import BatchNormalization
+from keras import regularizers
 import h5py
 import misc
 #import matplotlib.pyplot as plt
@@ -12,14 +13,14 @@ import json
 import os
 
 
-MODEL_TAG = 'dvs'
-EULER = True
+MODEL_TAG = 'dvs_36_batchN_avgPool'
+EULER = False
 TENSORBOARD = False
 CHECKPOINTS = True
 
-batch_size = 8
+batch_size = 32
 num_classes = 4
-epochs = 5
+epochs = 10
 
 # input image dimensions
 img_rows, img_cols = 36, 36
@@ -29,7 +30,7 @@ if EULER:
 else:
     processed_path = './data/processed/'
 
-processed_path += 'dvs_36/'
+processed_path += 'aps_36_exp_newresize/'
 
 hdf5_train = h5py.File(processed_path + 'train.hdf5','r')
 hdf5_test = h5py.File(processed_path + 'test.hdf5','r')
@@ -55,16 +56,29 @@ test_batches = misc.generate_batches_from_hdf5_file(hdf5_file=hdf5_test,
 
 
 model = Sequential()
-model.add(Conv2D(4, kernel_size=(5, 5),
-                 activation='relu',
-                 input_shape=(img_rows, img_cols, 1)))
-model.add(MaxPooling2D(pool_size=(2, 2)))
-model.add(Conv2D(4, (5, 5), activation='relu'))
-model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Conv2D(4, kernel_size=(5, 5), input_shape=(img_rows, img_cols, 1), bias_regularizer=regularizers.l2(0.01)))
+model.add(BatchNormalization())
+model.add(Activation('relu'))
+
+#model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(AveragePooling2D(pool_size=(2, 2)))
+
+model.add(Conv2D(4, (5, 5), bias_regularizer=regularizers.l2(0.01)))
+model.add(BatchNormalization())
+model.add(Activation('relu'))
+
+#model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(AveragePooling2D(pool_size=(2, 2)))
 model.add(Flatten())
-model.add(Dense(40, activation='relu'))
+
+model.add(Dense(40, bias_regularizer=regularizers.l2(0.01)))
+model.add(BatchNormalization())
+model.add(Activation('relu'))
 model.add(Dropout(0.25))
-model.add(Dense(num_classes, activation='softmax'))
+
+model.add(Dense(num_classes, bias_regularizer=regularizers.l2(0.01)))
+model.add(BatchNormalization())
+model.add(Activation('softmax'))
 
 # model.add(Conv2D(32, kernel_size=(3, 3),
 #                  activation='relu',

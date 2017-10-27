@@ -107,7 +107,7 @@ def to_categorical(y, num_classes=None):
     if not num_classes:
         num_classes = np.max(y)
     n = y.shape[0]
-    categorical = np.zeros((n, num_classes))
+    categorical = np.zeros((n, num_classes), dtype=np.int32)
     categorical[np.arange(n), y-1] = 1 # -1 because labels start at 1 not at 0
     return categorical
 
