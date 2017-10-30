@@ -1,15 +1,15 @@
 import numpy as np
 import h5py
 
-# def three_sigma_frame_clipping(frame):
-#     # Compute standard deviation of event-sum distribution
-#     # after removing zeros
-#     sigma = np.std(frame[np.nonzero(frame)])
-#
-#     # Clip number of events per pixel to three-sigma
-#     frame = np.clip(frame, 0, 3*sigma)
-#     return frame
-#
+def three_sigma_frame_clipping_evtsum(frame):
+    # Compute standard deviation of event-sum distribution
+    # after removing zeros
+    sigma = np.std(frame[np.nonzero(frame)])
+
+    # Clip number of events per pixel to three-sigma
+    frame = np.clip(frame, 0, 3*sigma)
+    return frame
+
 
 
 def aps_frame_scaling(frame):

@@ -13,10 +13,12 @@ import json
 import os
 
 
-MODEL_TAG = 'dvs_36_batchN_avgPool'
-EULER = False
+MODEL_TAG = 'dvs_36_avgPool_batchND40_L2'
+EULER = True
 TENSORBOARD = False
 CHECKPOINTS = True
+BIAS_REGULARIZER = regularizers.l2(0.01)
+BATCH_NORMALIZATION = True
 
 batch_size = 32
 num_classes = 4
@@ -30,10 +32,10 @@ if EULER:
 else:
     processed_path = './data/processed/'
 
-processed_path += 'aps_36_exp_newresize/'
+processed_path += 'full_36/full/'
 
-hdf5_train = h5py.File(processed_path + 'train.hdf5','r')
-hdf5_test = h5py.File(processed_path + 'test.hdf5','r')
+hdf5_train = h5py.File(processed_path + 'train_dvs.hdf5','r')
+hdf5_test = h5py.File(processed_path + 'test_dvs.hdf5','r')
 
 # x_test = hdf5_train['images'][-10:] # TODO: load seperate hdf5 file with validation data
 # x_test = x_test.reshape(x_test.shape[0], img_rows, img_cols, 1)
@@ -54,30 +56,33 @@ test_batches = misc.generate_batches_from_hdf5_file(hdf5_file=hdf5_test,
                                                     shuffle=False)
 
 
-
 model = Sequential()
-model.add(Conv2D(4, kernel_size=(5, 5), input_shape=(img_rows, img_cols, 1), bias_regularizer=regularizers.l2(0.01)))
-model.add(BatchNormalization())
+model.add(Conv2D(4, kernel_size=(5, 5), input_shape=(img_rows, img_cols, 1), bias_regularizer=BIAS_REGULARIZER))
+# if BATCH_NORMALIZATION:
+#     model.add(BatchNormalization())
 model.add(Activation('relu'))
 
 #model.add(MaxPooling2D(pool_size=(2, 2)))
 model.add(AveragePooling2D(pool_size=(2, 2)))
 
-model.add(Conv2D(4, (5, 5), bias_regularizer=regularizers.l2(0.01)))
-model.add(BatchNormalization())
+model.add(Conv2D(4, (5, 5), bias_regularizer=BIAS_REGULARIZER))
+# if BATCH_NORMALIZATION:
+#     model.add(BatchNormalization())
 model.add(Activation('relu'))
 
 #model.add(MaxPooling2D(pool_size=(2, 2)))
 model.add(AveragePooling2D(pool_size=(2, 2)))
 model.add(Flatten())
 
-model.add(Dense(40, bias_regularizer=regularizers.l2(0.01)))
-model.add(BatchNormalization())
+model.add(Dense(40, bias_regularizer=BIAS_REGULARIZER))
+if BATCH_NORMALIZATION:
+    model.add(BatchNormalization())
 model.add(Activation('relu'))
 model.add(Dropout(0.25))
 
-model.add(Dense(num_classes, bias_regularizer=regularizers.l2(0.01)))
-model.add(BatchNormalization())
+model.add(Dense(num_classes, bias_regularizer=BIAS_REGULARIZER))
+# if BATCH_NORMALIZATION:
+#     model.add(BatchNormalization())
 model.add(Activation('softmax'))
 
 # model.add(Conv2D(32, kernel_size=(3, 3),

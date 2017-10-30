@@ -1,6 +1,7 @@
 from PyAedatTools.ImportAedat import ImportAedat
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.colors import NoNorm
 import h5py
 import misc
 from tqdm import tqdm
@@ -15,8 +16,8 @@ args = parser.parse_args()
 
 print('PROCESSING RECORDING NR. ' + str(args.recording))
 
-EULER = False
-RESIZE = False
+EULER = True
+RESIZE = True
 SCALE_AND_CLIP = True
 EVENTS_PER_FRAME = 5000
 FRAME_DIM = (240,180)
@@ -63,7 +64,7 @@ aedat = {}
 aedat['importParams'] = {}
 aedat['info'] = {}
 
-aedat['importParams']['endEvent'] = 3e5;
+#aedat['importParams']['endEvent'] = 3e5;
 
 if EULER:
     aedat['importParams']['filePath'] = '../../../scratch/kaenzign/aedat/' + filenames.aedat_names[args.recording-1]
@@ -73,8 +74,8 @@ else:
 
 aedat = ImportAedat(aedat)
 
-#img = np.zeros(TARGET_DIM)
-img = np.full(TARGET_DIM, 0.5)
+img = np.zeros(TARGET_DIM)
+#img = np.full(TARGET_DIM, 0.5)
 
 
 filenames = [] #for gif generation
@@ -110,11 +111,11 @@ for t,x,y,p in tqdm(zip(aedat['data']['polarity']['timeStamp'], aedat['data']['p
         y = int(y/dim_scale[1])
 
     if p==True:
-        img[TARGET_DIM[0]-1-x][TARGET_DIM[1]-1-y] += 0.005
-        #img[TARGET_DIM[0]-1-x][TARGET_DIM[1]-1-y] += 1
+        #img[TARGET_DIM[0]-1-x][TARGET_DIM[1]-1-y] += 0.005
+        img[TARGET_DIM[0]-1-x][TARGET_DIM[1]-1-y] += 1
     else:
-        img[TARGET_DIM[0]-1-x][TARGET_DIM[1]-1-y] -= 0.005
-        # img[TARGET_DIM[0]-1-x][TARGET_DIM[1]-1-y] += 1
+        # img[TARGET_DIM[0]-1-x][TARGET_DIM[1]-1-y] -= 0.005
+        img[TARGET_DIM[0]-1-x][TARGET_DIM[1]-1-y] += 1
 
     tmp_frame_timestamps.append(t)
 
@@ -122,10 +123,13 @@ for t,x,y,p in tqdm(zip(aedat['data']['polarity']['timeStamp'], aedat['data']['p
 
     if i%EVENTS_PER_FRAME == 0:
         if SCALE_AND_CLIP:
-            img = misc.three_sigma_frame_clipping(img)
-            img = misc.dvs_frame_scaling(img)
+            # img = misc.three_sigma_frame_clipping(img)
+            # img = misc.dvs_frame_scaling(img)
 
-        # plt.imshow(img.T, cmap="gray")
+            img = misc.three_sigma_frame_clipping_evtsum(img)
+            img = misc.aps_frame_scaling(img)
+
+        # plt.imshow((img).T, cmap='gray', norm=NoNorm(vmin=0, vmax=1, clip=True))
         # filenames.append('./fig' + "noisy_metro_" + str(k) + ".png")
         # plt.savefig('./fig/' + "noisy_metro_" + str(k) + ".png")
 
