@@ -39,34 +39,37 @@ def balance_classes(x,y):
 
 NR_SAMPLES = 2000
 BALANCE_CLASSES = True
-TESTFILE = 'test_dvs.hdf5'
-TRAINFILE = 'train_dvs.hdf5'
-test_data_path = './data/processed/' + TESTFILE
-train_data_path = './data/processed/' + TRAINFILE
+TESTFILE = 'test.hdf5'
+TRAINFILE = 'train.hdf5'
+test_data_path = './data/processed/dvs_36_evtacc/' + TESTFILE
+train_data_path = './data/processed/dvs_36_evtacc/' + TRAINFILE
 
+DENSE = True
 
 test_h5 = h5py.File(test_data_path,'r')
-train_h5 = h5py.File(test_data_path,'r')
+train_h5 = h5py.File(train_data_path,'r')
 
 random_indexes = np.random.randint(0, test_h5['images'].shape[0], size=NR_SAMPLES)
 
 x_test = np.array(test_h5['images'])[random_indexes]
-x_test = x_test.reshape(x_test.shape[0], x_test.shape[1], x_test.shape[2], 1)
-y_test = np.array(test_h5['labels'])[random_indexes]
+if DENSE:
+    x_test = x_test.reshape(x_test.shape[0], x_test.shape[1]*x_test.shape[2])
+else:
+    x_test = x_test.reshape(x_test.shape[0], x_test.shape[1], x_test.shape[2])
 
+y_test = np.array(test_h5['labels'])[random_indexes]
 if BALANCE_CLASSES:
     x_test, y_test = balance_classes(x_test, y_test)
-
 
 y_test = misc.to_categorical(y_test)
 
 
-x_norm = test_h5['images'][:]
+random_indexes = np.random.randint(0, train_h5['images'].shape[0], size=int(0.2*train_h5['images'].shape[0]))
+x_norm = np.array(train_h5['images'])[random_indexes]
 x_norm = x_norm.reshape(x_norm.shape[0], x_norm.shape[1], x_norm.shape[2], 1)
 
 np.savez(file='x_test', arr_0=x_test)
 np.savez(file='y_test', arr_0=y_test)
-
 np.savez(file='x_norm', arr_0=x_norm)
 
 # y_t = np.load('y_test.npz')

@@ -14,7 +14,7 @@ import os
 
 
 MODEL_TAG = 'dvs_36_D512_D512_L2'
-EULER = True
+EULER = False
 TENSORBOARD = False
 CHECKPOINTS = True
 BIAS_REGULARIZER = regularizers.l2(0.01)

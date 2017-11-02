@@ -16,9 +16,11 @@ args = parser.parse_args()
 
 print('PROCESSING RECORDING NR. ' + str(args.recording))
 
-EULER = True
+EULER = False
 RESIZE = True
 SCALE_AND_CLIP = True
+DVS_FRAME_TYPE = 0  # 0 : integrate pos/negative events
+                    # 1 : use eventcounts
 EVENTS_PER_FRAME = 5000
 FRAME_DIM = (240,180)
 if RESIZE:
@@ -39,7 +41,7 @@ lines = inputfile.readlines()
 timestamps = []
 labels = []
 
-# note labels start at 1 not at 0 --> can't use standard keras to_categorigal fct later..
+# labels start at 1 not at 0 --> can't use standard keras to_categorigal fct later..
 for line in lines:
     line = line.strip()
     if line[0] == '#':
@@ -71,22 +73,23 @@ if EULER:
 else:
     aedat['importParams']['filePath'] = './data/aedat/' + filenames.aedat_names[args.recording - 1]
 
-
 aedat = ImportAedat(aedat)
 
-img = np.zeros(TARGET_DIM)
-#img = np.full(TARGET_DIM, 0.5)
 
+if DVS_FRAME_TYPE == 0:
+    img = np.full(TARGET_DIM, 0.5)
+if DVS_FRAME_TYPE == 1:
+    img = np.zeros(TARGET_DIM)
 
-filenames = [] #for gif generation
 
 i = 0
 k = 0
 last_j = 0
-
+filenames = [] #for gif generation
 tmp_frame_timestamps = []
 NR_FRAMES = int(len(aedat['data']['polarity']['timeStamp'])/EVENTS_PER_FRAME)
 frame_labels = np.zeros(NR_FRAMES+1)
+
 
 if EULER:
     hdf5_name = '../../../scratch/kaenzign/processed/dvs_recording' + str(args.recording)
@@ -110,12 +113,14 @@ for t,x,y,p in tqdm(zip(aedat['data']['polarity']['timeStamp'], aedat['data']['p
         x = int(x/dim_scale[0])
         y = int(y/dim_scale[1])
 
-    if p==True:
-        #img[TARGET_DIM[0]-1-x][TARGET_DIM[1]-1-y] += 0.005
-        img[TARGET_DIM[0]-1-x][TARGET_DIM[1]-1-y] += 1
-    else:
-        # img[TARGET_DIM[0]-1-x][TARGET_DIM[1]-1-y] -= 0.005
-        img[TARGET_DIM[0]-1-x][TARGET_DIM[1]-1-y] += 1
+    if DVS_FRAME_TYPE == 0:
+        if p==True:
+            img[TARGET_DIM[0]-1-x][TARGET_DIM[1]-1-y] += 0.005
+        else:
+            img[TARGET_DIM[0]-1-x][TARGET_DIM[1]-1-y] -= 0.005
+
+    if DVS_FRAME_TYPE == 1:
+        img[TARGET_DIM[0] - 1 - x][TARGET_DIM[1] - 1 - y] += 1
 
     tmp_frame_timestamps.append(t)
 
@@ -123,11 +128,13 @@ for t,x,y,p in tqdm(zip(aedat['data']['polarity']['timeStamp'], aedat['data']['p
 
     if i%EVENTS_PER_FRAME == 0:
         if SCALE_AND_CLIP:
-            # img = misc.three_sigma_frame_clipping(img)
-            # img = misc.dvs_frame_scaling(img)
+            if DVS_FRAME_TYPE == 0:
+                img = misc.three_sigma_frame_clipping(img)
+                img = misc.dvs_frame_scaling(img)
 
-            img = misc.three_sigma_frame_clipping_evtsum(img)
-            img = misc.aps_frame_scaling(img)
+            if DVS_FRAME_TYPE == 1:
+                img = misc.three_sigma_frame_clipping_evtsum(img)
+                img = misc.aps_frame_scaling(img)
 
         # plt.imshow((img).T, cmap='gray', norm=NoNorm(vmin=0, vmax=1, clip=True))
         # filenames.append('./fig' + "noisy_metro_" + str(k) + ".png")
@@ -139,11 +146,12 @@ for t,x,y,p in tqdm(zip(aedat['data']['polarity']['timeStamp'], aedat['data']['p
                     d_label[k] = d_label[k-1]
                 break
 
+            # take the label of the first timestamp that matches
             if timestamps[j] in tmp_frame_timestamps:
                 d_label[k] = labels[j]
                 last_j = j
-                # print(j,k,labels[j]) # DEBUG
-                break # just take the label of the first timestamp that matches
+                # print(j,k,labels[j])
+                break
 
         tmp_frame_timestamps = []
         d_img[k] = img
@@ -158,8 +166,3 @@ for label in d_label:
         d_label[:i] = label
     else:
         i += 1
-
-
-# plt.imshow(img, cmap="hot")
-# plt.colorbar()
-# plt.show()
