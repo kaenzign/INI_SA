@@ -120,7 +120,7 @@ for t,x,y,p in tqdm(zip(aedat['data']['polarity']['timeStamp'], aedat['data']['p
             img[TARGET_DIM[0]-1-x][TARGET_DIM[1]-1-y] -= 0.005
 
     if DVS_FRAME_TYPE == 1:
-        img[TARGET_DIM[0] - 1 - x][TARGET_DIM[1] - 1 - y] += 1
+        img[TARGET_DIM[0]-1-x][TARGET_DIM[1]-1-y] += 1
 
     tmp_frame_timestamps.append(t)
 
@@ -155,7 +155,11 @@ for t,x,y,p in tqdm(zip(aedat['data']['polarity']['timeStamp'], aedat['data']['p
 
         tmp_frame_timestamps = []
         d_img[k] = img
-        img = np.full(TARGET_DIM, 0.5)
+
+        if DVS_FRAME_TYPE == 0:
+            img = np.full(TARGET_DIM, 0.5)
+        if DVS_FRAME_TYPE == 1:
+            img = np.zeros(TARGET_DIM)
         k += 1
 
 
