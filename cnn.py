@@ -13,10 +13,11 @@ import json
 import os
 
 
-MODEL_TAG = 'dvs_36_D512_D512_L2'
+MODEL_TAG = 'TEST_BIAS'
 EULER = False
 TENSORBOARD = False
 CHECKPOINTS = True
+ZERO_BIAS = False
 BIAS_REGULARIZER = regularizers.l2(0.01)
 BATCH_NORMALIZATION = True
 
@@ -32,10 +33,10 @@ if EULER:
 else:
     processed_path = './data/processed/'
 
-processed_path += 'full_36/full/'
+processed_path += 'dvs_36_evtacc/'
 
-hdf5_train = h5py.File(processed_path + 'train_dvs.hdf5','r')
-hdf5_test = h5py.File(processed_path + 'test_dvs.hdf5','r')
+hdf5_train = h5py.File(processed_path + 'train.hdf5','r')
+hdf5_test = h5py.File(processed_path + 'test.hdf5','r')
 
 dimensions = (batch_size,img_rows,img_cols,1)
 dimensions = (batch_size,img_rows*img_cols)
@@ -55,7 +56,7 @@ test_batches = misc.generate_batches_from_hdf5_file(hdf5_file=hdf5_test,
 
 
 # model = Sequential()
-# model.add(Conv2D(4, kernel_size=(5, 5), input_shape=(img_rows, img_cols, 1), bias_regularizer=BIAS_REGULARIZER))
+# model.add(Conv2D(4, kernel_size=(5, 5), input_shape=(img_rows, img_cols, 1), bias_regularizer=BIAS_REGULARIZER, use_bias=ZERO_BIAS))
 # # if BATCH_NORMALIZATION:
 # #     model.add(BatchNormalization())
 # model.add(Activation('relu'))
@@ -63,7 +64,7 @@ test_batches = misc.generate_batches_from_hdf5_file(hdf5_file=hdf5_test,
 # #model.add(MaxPooling2D(pool_size=(2, 2)))
 # model.add(AveragePooling2D(pool_size=(2, 2)))
 #
-# model.add(Conv2D(4, (5, 5), bias_regularizer=BIAS_REGULARIZER))
+# model.add(Conv2D(4, (5, 5), bias_regularizer=BIAS_REGULARIZER, use_bias=ZERO_BIAS))
 # # if BATCH_NORMALIZATION:
 # #     model.add(BatchNormalization())
 # model.add(Activation('relu'))
@@ -72,24 +73,24 @@ test_batches = misc.generate_batches_from_hdf5_file(hdf5_file=hdf5_test,
 # model.add(AveragePooling2D(pool_size=(2, 2)))
 # model.add(Flatten())
 #
-# model.add(Dense(40, bias_regularizer=BIAS_REGULARIZER))
+# model.add(Dense(40, bias_regularizer=BIAS_REGULARIZER, use_bias=ZERO_BIAS))
 # if BATCH_NORMALIZATION:
 #     model.add(BatchNormalization())
 # model.add(Activation('relu'))
 # model.add(Dropout(0.25))
 #
-# model.add(Dense(num_classes, bias_regularizer=BIAS_REGULARIZER))
+# model.add(Dense(num_classes, bias_regularizer=BIAS_REGULARIZER, use_bias=ZERO_BIAS))
 # # if BATCH_NORMALIZATION:
 # #     model.add(BatchNormalization())
 # model.add(Activation('softmax'))
 
 
 model = Sequential()
-model.add(Dense(512, activation='relu', input_shape=(img_cols*img_rows,), bias_regularizer=BIAS_REGULARIZER))
+model.add(Dense(16, activation='relu', input_shape=(img_cols*img_rows,), bias_regularizer=BIAS_REGULARIZER, use_bias=ZERO_BIAS))
 model.add(Dropout(0.2))
-model.add(Dense(512, activation='relu', bias_regularizer=BIAS_REGULARIZER))
-model.add(Dropout(0.2))
-model.add(Dense(num_classes, activation='softmax', bias_regularizer=BIAS_REGULARIZER))
+# model.add(Dense(64, activation='relu', bias_regularizer=BIAS_REGULARIZER, use_bias=ZERO_BIAS))
+# model.add(Dropout(0.2))
+model.add(Dense(num_classes, activation='softmax', bias_regularizer=BIAS_REGULARIZER, use_bias=ZERO_BIAS))
 
 
 model.compile(loss=keras.losses.categorical_crossentropy,
