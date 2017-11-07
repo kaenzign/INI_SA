@@ -66,7 +66,10 @@ y_test = misc.to_categorical(y_test)
 
 random_indexes = np.random.randint(0, train_h5['images'].shape[0], size=int(0.2*train_h5['images'].shape[0]))
 x_norm = np.array(train_h5['images'])[random_indexes]
-x_norm = x_norm.reshape(x_norm.shape[0], x_norm.shape[1], x_norm.shape[2], 1)
+if DENSE:
+    x_norm = x_norm.reshape(x_norm.shape[0], x_norm.shape[1]*x_norm.shape[2])
+else:
+    x_norm = x_norm.reshape(x_norm.shape[0], x_norm.shape[1], x_norm.shape[2], 1)
 
 np.savez(file='x_test', arr_0=x_test)
 np.savez(file='y_test', arr_0=y_test)

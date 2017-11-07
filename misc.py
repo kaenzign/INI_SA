@@ -30,6 +30,7 @@ def three_sigma_frame_clipping(frame):
     c_l = mean - 1.5*sigma
     c_r = mean + 1.5*sigma
     frame[np.nonzero(frame!=0.5)] = np.clip(frame[np.nonzero(frame!=0.5)], c_l, c_r)
+    #frame = np.clip(frame, c_l, c_r)
     return frame
 
 

@@ -160,7 +160,7 @@ def extract_DVS_labels(nr_frames, frame_indexes):
     with open('./data/aedat/dvs_test_labels_' + str(args.recording) + '.json', 'w') as f:
         json.dump(label_dict, f)
 
-def extract_k_random_frames(aedat_file, nr_frames, frame_size, k):
+def extract_k_frames(aedat_file, nr_frames, frame_size, k):
     aerdata_fh = open(aedat_file, 'rb')
     dvs_h5 = h5py.File(hdf5_name, 'r')
 
@@ -178,10 +178,19 @@ def extract_k_random_frames(aedat_file, nr_frames, frame_size, k):
 
     # HEADER
     p, header_lines = parse_header(aerdata_fh)
+    skipped = 0
 
     for nr, index in enumerate(frame_indexes):
         file_pointer = p + index*aeLen*frame_size
         aerdata_fh.seek(file_pointer)
+
+        # filter out some invalid frames
+        line = aerdata_fh.readline()
+        if chr(line[0]) == '#':
+            skipped += 1
+            continue
+        else:
+            aerdata_fh.seek(file_pointer)
 
         frame_data = aerdata_fh.read(frame_size*aeLen)
         
@@ -203,7 +212,7 @@ def extract_k_random_frames(aedat_file, nr_frames, frame_size, k):
         target_fh.writelines(header_lines)
         target_fh.write(frame_data)
 
-    return frame_indexes
+    return frame_indexes, skipped
 
 
 
@@ -213,7 +222,7 @@ def extract_k_random_frames(aedat_file, nr_frames, frame_size, k):
 start_time = time.time()
 # check_target(aedat_file, target_file)
 
-# extract_DVS_events(aedat_file, full_target_file)
+extract_DVS_events(aedat_file, full_target_file)
 
 nr_events = write_test_aedat(full_target_file, test_target_file, TEST_FRACTION)
 nr_frames = int(nr_events/EVENTS_PER_FRAME)
@@ -223,10 +232,10 @@ if NR_FRAME_DIV != None:
 else:
     k = nr_frames
 
-frame_indexes = extract_k_random_frames(test_target_file, nr_frames, 5000, k)
+frame_indexes, skipped = extract_k_frames(test_target_file, nr_frames, 5000, k)
 
 # extract_DVS_labels(nr_frames, frame_indexes)
 
 print('total number of frames: ' + str(nr_frames))
-print('extracted number of frames: ' + str(k))
+print('extracted number of frames: ' + str(k-skipped))
 print("--- %s seconds ---" % (time.time() - start_time))
