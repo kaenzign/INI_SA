@@ -13,7 +13,7 @@ import json
 import os
 
 
-MODEL_TAG = 'TEST_BIAS'
+MODEL_TAG = 'dvs36_evtacc_D16_B0_FLAT_10E'
 EULER = False
 TENSORBOARD = False
 CHECKPOINTS = True
@@ -23,7 +23,7 @@ BATCH_NORMALIZATION = True
 
 batch_size = 32
 num_classes = 4
-epochs = 30
+epochs = 10
 
 # input image dimensions
 img_rows, img_cols = 36, 36
@@ -39,7 +39,7 @@ hdf5_train = h5py.File(processed_path + 'train.hdf5','r')
 hdf5_test = h5py.File(processed_path + 'test.hdf5','r')
 
 dimensions = (batch_size,img_rows,img_cols,1)
-dimensions = (batch_size,img_rows*img_cols)
+#dimensions = (batch_size,img_rows*img_cols)
 
 
 train_batches = misc.generate_batches_from_hdf5_file(hdf5_file=hdf5_train,
@@ -86,7 +86,9 @@ test_batches = misc.generate_batches_from_hdf5_file(hdf5_file=hdf5_test,
 
 
 model = Sequential()
-model.add(Dense(16, activation='relu', input_shape=(img_cols*img_rows,), bias_regularizer=BIAS_REGULARIZER, use_bias=ZERO_BIAS))
+model.add(Flatten(input_shape=(img_rows, img_cols, 1)))
+model.add(Dense(16, activation='relu',  bias_regularizer=BIAS_REGULARIZER, use_bias=ZERO_BIAS))
+#model.add(Dense(16, activation='relu', input_shape=(img_cols*img_rows,), bias_regularizer=BIAS_REGULARIZER, use_bias=ZERO_BIAS))
 model.add(Dropout(0.2))
 # model.add(Dense(64, activation='relu', bias_regularizer=BIAS_REGULARIZER, use_bias=ZERO_BIAS))
 # model.add(Dropout(0.2))
