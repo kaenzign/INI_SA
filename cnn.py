@@ -5,6 +5,7 @@ from keras.models import Sequential
 from keras.layers import Dense, Dropout, Flatten, Activation
 from keras.layers import Conv2D, MaxPooling2D, AveragePooling2D
 from keras.layers.normalization import BatchNormalization
+from keras.constraints import non_neg
 from keras import regularizers
 import h5py
 import misc
@@ -12,18 +13,38 @@ import misc
 import json
 import os
 
+import argparse
 
-MODEL_TAG = 'dvs36_evtacc_D16_B0_FLAT_10E'
+parser = argparse.ArgumentParser()
+parser.add_argument("-model", "--model", type=int, help="nunber of neurons")
+parser.add_argument("-N", "--neurons", type=int, help="nunber of neurons")
+parser.add_argument("-tag", "--tag", type=str, help="tag for hdf5 file name")
+args = parser.parse_args()
+
+if args.tag!=None:
+    MODEL_TAG = args.tag
+else:
+    MODEL_TAG = 'dvs36_evtaccCOR_D16_B0_FLAT_30E'
 EULER = False
 TENSORBOARD = False
 CHECKPOINTS = True
 ZERO_BIAS = False
 BIAS_REGULARIZER = regularizers.l2(0.01)
 BATCH_NORMALIZATION = True
+WEIGHT_CONSTRAINT = non_neg()
+WEIGHT_CONSTRAINT = None
+if args.neurons != None:
+    NEURONS = args.neurons
+else:
+    NEURONS = 16
+if args.model != None:
+    MODEL = args.model
+else:
+    MODEL = 2 # 1: CNN, 2: MLP
 
 batch_size = 32
 num_classes = 4
-epochs = 10
+epochs = 30
 
 # input image dimensions
 img_rows, img_cols = 36, 36
@@ -33,7 +54,7 @@ if EULER:
 else:
     processed_path = './data/processed/'
 
-processed_path += 'dvs_36_evtacc/'
+processed_path += 'dvs_36_evtacc_corrected/'
 
 hdf5_train = h5py.File(processed_path + 'train.hdf5','r')
 hdf5_test = h5py.File(processed_path + 'test.hdf5','r')
@@ -54,45 +75,45 @@ test_batches = misc.generate_batches_from_hdf5_file(hdf5_file=hdf5_test,
                                                     num_classes=num_classes,
                                                     shuffle=False)
 
+if MODEL==1:
+    model = Sequential()
+    model.add(Conv2D(4, kernel_size=(5, 5), input_shape=(img_rows, img_cols, 1), bias_regularizer=BIAS_REGULARIZER, use_bias=ZERO_BIAS))
+    # if BATCH_NORMALIZATION:
+    #     model.add(BatchNormalization())
+    model.add(Activation('relu'))
 
-# model = Sequential()
-# model.add(Conv2D(4, kernel_size=(5, 5), input_shape=(img_rows, img_cols, 1), bias_regularizer=BIAS_REGULARIZER, use_bias=ZERO_BIAS))
-# # if BATCH_NORMALIZATION:
-# #     model.add(BatchNormalization())
-# model.add(Activation('relu'))
-#
-# #model.add(MaxPooling2D(pool_size=(2, 2)))
-# model.add(AveragePooling2D(pool_size=(2, 2)))
-#
-# model.add(Conv2D(4, (5, 5), bias_regularizer=BIAS_REGULARIZER, use_bias=ZERO_BIAS))
-# # if BATCH_NORMALIZATION:
-# #     model.add(BatchNormalization())
-# model.add(Activation('relu'))
-#
-# #model.add(MaxPooling2D(pool_size=(2, 2)))
-# model.add(AveragePooling2D(pool_size=(2, 2)))
-# model.add(Flatten())
-#
-# model.add(Dense(40, bias_regularizer=BIAS_REGULARIZER, use_bias=ZERO_BIAS))
-# if BATCH_NORMALIZATION:
-#     model.add(BatchNormalization())
-# model.add(Activation('relu'))
-# model.add(Dropout(0.25))
-#
-# model.add(Dense(num_classes, bias_regularizer=BIAS_REGULARIZER, use_bias=ZERO_BIAS))
-# # if BATCH_NORMALIZATION:
-# #     model.add(BatchNormalization())
-# model.add(Activation('softmax'))
+    #model.add(MaxPooling2D(pool_size=(2, 2)))
+    model.add(AveragePooling2D(pool_size=(2, 2)))
 
+    model.add(Conv2D(4, (5, 5), bias_regularizer=BIAS_REGULARIZER, use_bias=ZERO_BIAS))
+    # if BATCH_NORMALIZATION:
+    #     model.add(BatchNormalization())
+    model.add(Activation('relu'))
 
-model = Sequential()
-model.add(Flatten(input_shape=(img_rows, img_cols, 1)))
-model.add(Dense(16, activation='relu',  bias_regularizer=BIAS_REGULARIZER, use_bias=ZERO_BIAS))
-#model.add(Dense(16, activation='relu', input_shape=(img_cols*img_rows,), bias_regularizer=BIAS_REGULARIZER, use_bias=ZERO_BIAS))
-model.add(Dropout(0.2))
-# model.add(Dense(64, activation='relu', bias_regularizer=BIAS_REGULARIZER, use_bias=ZERO_BIAS))
-# model.add(Dropout(0.2))
-model.add(Dense(num_classes, activation='softmax', bias_regularizer=BIAS_REGULARIZER, use_bias=ZERO_BIAS))
+    #model.add(MaxPooling2D(pool_size=(2, 2)))
+    model.add(AveragePooling2D(pool_size=(2, 2)))
+    model.add(Flatten())
+
+    model.add(Dense(40, bias_regularizer=BIAS_REGULARIZER, use_bias=ZERO_BIAS))
+    if BATCH_NORMALIZATION:
+        model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(Dropout(0.25))
+
+    model.add(Dense(num_classes, bias_regularizer=BIAS_REGULARIZER, use_bias=ZERO_BIAS))
+    # if BATCH_NORMALIZATION:
+    #     model.add(BatchNormalization())
+    model.add(Activation('softmax'))
+
+if MODEL==2:
+    model = Sequential()
+    model.add(Flatten(input_shape=(img_rows, img_cols, 1)))
+    model.add(Dense(NEURONS, activation='relu',  bias_regularizer=BIAS_REGULARIZER, use_bias=ZERO_BIAS, kernel_constraint=WEIGHT_CONSTRAINT))
+    #model.add(Dense(16, activation='relu', input_shape=(img_cols*img_rows,), bias_regularizer=BIAS_REGULARIZER, use_bias=ZERO_BIAS))
+    model.add(Dropout(0.2))
+    # model.add(Dense(64, activation='relu', bias_regularizer=BIAS_REGULARIZER, use_bias=ZERO_BIAS))
+    # model.add(Dropout(0.2))
+    model.add(Dense(num_classes, activation='softmax', bias_regularizer=BIAS_REGULARIZER, use_bias=ZERO_BIAS, kernel_constraint=WEIGHT_CONSTRAINT))
 
 
 model.compile(loss=keras.losses.categorical_crossentropy,
@@ -105,10 +126,10 @@ num_test_batches_per_epoch = int((len(hdf5_test['labels']) - 1) / batch_size)
 
 if MODEL_TAG != '':
     log_dir = './log/' + MODEL_TAG + '/'
-    model_dir = './model/'+ MODEL_TAG + '/'
+    model_dir = './model/new/'+ MODEL_TAG + '/'
 else:
     log_dir = './log'
-    model_dir = './model/'
+    model_dir = './model/new/'
 
 if TENSORBOARD:
     tensorboard_cb = keras.callbacks.TensorBoard(log_dir=log_dir,
