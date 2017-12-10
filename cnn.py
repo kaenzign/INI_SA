@@ -24,19 +24,19 @@ args = parser.parse_args()
 if args.tag!=None:
     MODEL_TAG = args.tag
 else:
-    MODEL_TAG = 'dvs36_evtaccCOR_D16_B0_FLAT_30E'
+    MODEL_TAG = 'D8_B'
 EULER = False
 TENSORBOARD = False
 CHECKPOINTS = True
-ZERO_BIAS = False
-BIAS_REGULARIZER = regularizers.l2(0.01)
+USE_BIAS = True
+BIAS_REGULARIZER = None
 BATCH_NORMALIZATION = True
 WEIGHT_CONSTRAINT = non_neg()
 WEIGHT_CONSTRAINT = None
 if args.neurons != None:
     NEURONS = args.neurons
 else:
-    NEURONS = 16
+    NEURONS = 8
 if args.model != None:
     MODEL = args.model
 else:
@@ -77,7 +77,7 @@ test_batches = misc.generate_batches_from_hdf5_file(hdf5_file=hdf5_test,
 
 if MODEL==1:
     model = Sequential()
-    model.add(Conv2D(4, kernel_size=(5, 5), input_shape=(img_rows, img_cols, 1), bias_regularizer=BIAS_REGULARIZER, use_bias=ZERO_BIAS))
+    model.add(Conv2D(4, kernel_size=(5, 5), input_shape=(img_rows, img_cols, 1), bias_regularizer=BIAS_REGULARIZER, use_bias=USE_BIAS))
     # if BATCH_NORMALIZATION:
     #     model.add(BatchNormalization())
     model.add(Activation('relu'))
@@ -85,7 +85,7 @@ if MODEL==1:
     #model.add(MaxPooling2D(pool_size=(2, 2)))
     model.add(AveragePooling2D(pool_size=(2, 2)))
 
-    model.add(Conv2D(4, (5, 5), bias_regularizer=BIAS_REGULARIZER, use_bias=ZERO_BIAS))
+    model.add(Conv2D(4, (5, 5), bias_regularizer=BIAS_REGULARIZER, use_bias=USE_BIAS))
     # if BATCH_NORMALIZATION:
     #     model.add(BatchNormalization())
     model.add(Activation('relu'))
@@ -94,13 +94,13 @@ if MODEL==1:
     model.add(AveragePooling2D(pool_size=(2, 2)))
     model.add(Flatten())
 
-    model.add(Dense(40, bias_regularizer=BIAS_REGULARIZER, use_bias=ZERO_BIAS))
+    model.add(Dense(40, bias_regularizer=BIAS_REGULARIZER, use_bias=USE_BIAS))
     if BATCH_NORMALIZATION:
         model.add(BatchNormalization())
     model.add(Activation('relu'))
     model.add(Dropout(0.25))
 
-    model.add(Dense(num_classes, bias_regularizer=BIAS_REGULARIZER, use_bias=ZERO_BIAS))
+    model.add(Dense(num_classes, bias_regularizer=BIAS_REGULARIZER, use_bias=USE_BIAS))
     # if BATCH_NORMALIZATION:
     #     model.add(BatchNormalization())
     model.add(Activation('softmax'))
@@ -108,12 +108,12 @@ if MODEL==1:
 if MODEL==2:
     model = Sequential()
     model.add(Flatten(input_shape=(img_rows, img_cols, 1)))
-    model.add(Dense(NEURONS, activation='relu',  bias_regularizer=BIAS_REGULARIZER, use_bias=ZERO_BIAS, kernel_constraint=WEIGHT_CONSTRAINT))
-    #model.add(Dense(16, activation='relu', input_shape=(img_cols*img_rows,), bias_regularizer=BIAS_REGULARIZER, use_bias=ZERO_BIAS))
+    model.add(Dense(NEURONS, activation='relu',  bias_regularizer=BIAS_REGULARIZER, use_bias=USE_BIAS, kernel_constraint=WEIGHT_CONSTRAINT))
+    #model.add(Dense(16, activation='relu', input_shape=(img_cols*img_rows,), bias_regularizer=BIAS_REGULARIZER, use_bias=USE_BIAS))
     model.add(Dropout(0.2))
-    # model.add(Dense(64, activation='relu', bias_regularizer=BIAS_REGULARIZER, use_bias=ZERO_BIAS))
+    # model.add(Dense(64, activation='relu', bias_regularizer=BIAS_REGULARIZER, use_bias=USE_BIAS))
     # model.add(Dropout(0.2))
-    model.add(Dense(num_classes, activation='softmax', bias_regularizer=BIAS_REGULARIZER, use_bias=ZERO_BIAS, kernel_constraint=WEIGHT_CONSTRAINT))
+    model.add(Dense(num_classes, activation='softmax', bias_regularizer=BIAS_REGULARIZER, use_bias=USE_BIAS, kernel_constraint=WEIGHT_CONSTRAINT))
 
 
 model.compile(loss=keras.losses.categorical_crossentropy,
