@@ -1,3 +1,14 @@
+"""
+EVENT-BASED OBJECT RECOGNITION USING ANALOG AND SPIKING NEURAL NETWORKS
+Semesterproject
+
+filenames.py
+Contains filenames for all 20 recordings and the corresponding labels of the predator/prey dataset
+
+@author: Nicolas Kaenzig, D-ITET, ETH Zurich
+"""
+
+# LABELS
 target_names = [
 'DAVIS240C-2016-01-11T15-43-32+0000-04010058-0_recording_1-targets.txt',
 'DAVIS240C-2016-01-11T15-50-11+0000-04010058-0_recording_2-targets.txt',
@@ -19,10 +30,9 @@ target_names = [
 'DAVIS240C-2016-02-26T10-22-32+0000-04010058-0_recording_18-targets.txt',
 'DAVIS240C-2016-02-26T10-25-55+0000-04010058-0_recording_19-targets.txt',
 'DAVIS240C-2016-02-26T10-30-41+0000-04010058-0_recording_20-targets.txt'
-
-
 ]
 
+# AEDAT FILES
 aedat_names = [
 'DAVIS240C-2016-01-11T15-43-32+0000-04010058-0_recording_1.aedat',
 'DAVIS240C-2016-01-11T15-50-11+0000-04010058-0_recording_2.aedat',
@@ -46,6 +56,7 @@ aedat_names = [
 'DAVIS240C-2016-02-26T10-30-41+0000-04010058-0_recording_20.aedat'
 ]
 
+# AVI TIMECODES USED FOR APS LABELLING
 aps_timecode_names = [
 'DAVIS240C-2016-01-11T15-43-32+0000-04010058-0_recording_1_APS-timecode.txt',
 'DAVIS240C-2016-01-11T15-50-11+0000-04010058-0_recording_2_APS-timecode.txt',
@@ -69,6 +80,7 @@ aps_timecode_names = [
 'DAVIS240C-2016-02-26T10-30-41+0000-04010058-0_recording_20_APS-timecode.txt'
 ]
 
+# AVS FILES CONTAINING APS SAMPLES
 aps_avi_names = [
 'DAVIS240C-2016-01-11T15-43-32+0000-04010058-0_recording_1_APS.avi',
 'DAVIS240C-2016-01-11T15-50-11+0000-04010058-0_recording_2_APS.avi',

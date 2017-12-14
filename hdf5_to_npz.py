@@ -1,3 +1,17 @@
+"""
+EVENT-BASED OBJECT RECOGNITION USING ANALOG AND SPIKING NEURAL NETWORKS
+Semesterproject
+
+hdf5_to_npz.py
+Used to create npz files for ANN-SNN toolbox
+x_norm.npz contains a fraction of the trainset to be used for normalizing weights and biases
+x_test.npz contains test frames
+y_test.npz contains labels of the test frames
+
+
+@author: Nicolas Kaenzig, D-ITET, ETH Zurich
+"""
+
 import numpy as np
 import h5py
 import misc
@@ -63,7 +77,6 @@ if BALANCE_CLASSES:
 
 y_test = misc.to_categorical(y_test)
 
-
 random_indexes = np.random.randint(0, train_h5['images'].shape[0], size=int(0.2*train_h5['images'].shape[0]))
 x_norm = np.array(train_h5['images'])[random_indexes]
 if DENSE:
@@ -74,11 +87,3 @@ else:
 np.savez(file='x_test', arr_0=x_test)
 np.savez(file='y_test', arr_0=y_test)
 np.savez(file='x_norm', arr_0=x_norm)
-
-# y_t = np.load('y_test.npz')
-# y_t = y_t['arr_0']
-#
-# x_t = np.load('x_test.npz')
-# x_t = x_t['arr_0']
-
-i=0

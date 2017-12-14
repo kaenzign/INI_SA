@@ -1,3 +1,14 @@
+"""
+EVENT-BASED OBJECT RECOGNITION USING ANALOG AND SPIKING NEURAL NETWORKS
+Semesterproject
+
+models.py
+This module contains keras implementation of the implemented CNN and MLP models and can be used for training.
+During training the model parameters are stored to .h5 files after each epoch
+
+@author: Nicolas Kaenzig, D-ITET, ETH Zurich
+"""
+
 from __future__ import print_function
 import keras
 from keras.datasets import mnist
@@ -24,30 +35,28 @@ args = parser.parse_args()
 if args.tag!=None:
     MODEL_TAG = args.tag
 else:
-    MODEL_TAG = 'D8_B'
-EULER = False
-TENSORBOARD = False
-CHECKPOINTS = True
-USE_BIAS = True
-BIAS_REGULARIZER = None
-BATCH_NORMALIZATION = True
-WEIGHT_CONSTRAINT = non_neg()
-WEIGHT_CONSTRAINT = None
-if args.neurons != None:
+    MODEL_TAG = 'dvs36_evtaccCOR_D16_B0_FLAT_30E'
+EULER = False       # set True to run script on EULER computer
+TENSORBOARD = False # track accuracies and losses using tensorboard (only when running with tensorflow)
+CHECKPOINTS = True  # True to save model checkpoints after each epoch
+USE_BIAS = False    # Use biases, set False for zero bias constraint
+BIAS_REGULARIZER = regularizers.l2(0.01)    # Bias regularizer to be used, set None for none
+BATCH_NORMALIZATION = False                 # set True to enable batch normalization
+WEIGHT_CONSTRAINT = None                    # weight constraint to be used, e.g. non_neg(). Else set to None
+if args.neurons != None:                    # Nr of hidden neurons for MLP model, set with -neurons tag or manually
     NEURONS = args.neurons
 else:
-    NEURONS = 8
-if args.model != None:
+    NEURONS = 16
+if args.model != None:                      # Modeltype to be trained -  1: CNN, 2: MLP
     MODEL = args.model
 else:
-    MODEL = 2 # 1: CNN, 2: MLP
+    MODEL = 2
 
-batch_size = 32
-num_classes = 4
-epochs = 30
+batch_size = 32     # batch size during training
+num_classes = 4     # number of the ouput classes for classification
+epochs = 30         # number of epochs of training
 
-# input image dimensions
-img_rows, img_cols = 36, 36
+img_rows, img_cols = 36, 36 # input image dimensions
 
 if EULER:
     processed_path = '../../../scratch/kaenzign/processed/'
@@ -78,16 +87,12 @@ test_batches = misc.generate_batches_from_hdf5_file(hdf5_file=hdf5_test,
 if MODEL==1:
     model = Sequential()
     model.add(Conv2D(4, kernel_size=(5, 5), input_shape=(img_rows, img_cols, 1), bias_regularizer=BIAS_REGULARIZER, use_bias=USE_BIAS))
-    # if BATCH_NORMALIZATION:
-    #     model.add(BatchNormalization())
     model.add(Activation('relu'))
 
     #model.add(MaxPooling2D(pool_size=(2, 2)))
     model.add(AveragePooling2D(pool_size=(2, 2)))
 
     model.add(Conv2D(4, (5, 5), bias_regularizer=BIAS_REGULARIZER, use_bias=USE_BIAS))
-    # if BATCH_NORMALIZATION:
-    #     model.add(BatchNormalization())
     model.add(Activation('relu'))
 
     #model.add(MaxPooling2D(pool_size=(2, 2)))
@@ -101,18 +106,13 @@ if MODEL==1:
     model.add(Dropout(0.25))
 
     model.add(Dense(num_classes, bias_regularizer=BIAS_REGULARIZER, use_bias=USE_BIAS))
-    # if BATCH_NORMALIZATION:
-    #     model.add(BatchNormalization())
     model.add(Activation('softmax'))
 
 if MODEL==2:
     model = Sequential()
     model.add(Flatten(input_shape=(img_rows, img_cols, 1)))
     model.add(Dense(NEURONS, activation='relu',  bias_regularizer=BIAS_REGULARIZER, use_bias=USE_BIAS, kernel_constraint=WEIGHT_CONSTRAINT))
-    #model.add(Dense(16, activation='relu', input_shape=(img_cols*img_rows,), bias_regularizer=BIAS_REGULARIZER, use_bias=USE_BIAS))
     model.add(Dropout(0.2))
-    # model.add(Dense(64, activation='relu', bias_regularizer=BIAS_REGULARIZER, use_bias=USE_BIAS))
-    # model.add(Dropout(0.2))
     model.add(Dense(num_classes, activation='softmax', bias_regularizer=BIAS_REGULARIZER, use_bias=USE_BIAS, kernel_constraint=WEIGHT_CONSTRAINT))
 
 

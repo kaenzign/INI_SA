@@ -1,7 +1,17 @@
+"""
+EVENT-BASED OBJECT RECOGNITION USING ANALOG AND SPIKING NEURAL NETWORKS
+Semesterproject
+
+count_classes.py
+Script used to count classes of samples in a .h5 dataset
+
+@author: Nicolas Kaenzig, D-ITET, ETH Zurich
+"""
+
 import h5py
 import matplotlib.pyplot as plt
 
-EULER = True
+EULER = True # set True to run script on EULER computer
 
 if EULER:
     processed_path = '../../../scratch/kaenzign/processed/'
@@ -48,9 +58,6 @@ for label in labels_test:
         counts_test['C'] += 1
     elif label == 4:
         counts_test['R'] += 1
-
-
-
 
 
 print('N_train ' + str(counts_train['N']))

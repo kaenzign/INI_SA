@@ -1,3 +1,14 @@
+"""
+EVENT-BASED OBJECT RECOGNITION USING ANALOG AND SPIKING NEURAL NETWORKS
+Semesterproject
+
+extract_and_label_dvs.py
+This script was used to create DVS frames from the predator/prey .aedat recordings and to label them.
+The processed data is stored in .h5 files
+
+@author: Nicolas Kaenzig, D-ITET, ETH Zurich
+"""
+
 from PyAedatTools.ImportAedat import ImportAedat
 import numpy as np
 import matplotlib.pyplot as plt
@@ -16,13 +27,15 @@ args = parser.parse_args()
 
 print('PROCESSING RECORDING NR. ' + str(args.recording))
 
-EULER = False
-RESIZE = True
-SCALE_AND_CLIP = True
-DVS_FRAME_TYPE = 0  # 0 : integrate pos/negative events
-                    # 1 : use eventcounts
+EULER = False           # set True to run script on EULER computer
+RESIZE = False          # set True to resize/subsample the frames to TARGET_DIM
+SINGLE_MODE = False     # set True to keep only one event of a patch during subsampling
+SCALE_AND_CLIP = True   # 3-sigma clipping and scaling to [0,1]
+DVS_FRAME_TYPE = 0      # 0 : integrate pos/negative events for frame accumulation
+                        # 1 : use eventcounts/rectified frames
 EVENTS_PER_FRAME = 5000
 FRAME_DIM = (240,180)
+SAVE_FRAME_PLOTS = True
 if RESIZE:
     TARGET_DIM = (36,36)
 else:
@@ -41,7 +54,7 @@ lines = inputfile.readlines()
 timestamps = []
 labels = []
 
-# labels start at 1 not at 0 --> can't use standard keras to_categorigal fct later..
+# labels start at 1 not at 0 --> can't use standard keras to_categorigal fct late
 for line in lines:
     line = line.strip()
     if line[0] == '#':
@@ -66,7 +79,7 @@ aedat = {}
 aedat['importParams'] = {}
 aedat['info'] = {}
 
-#aedat['importParams']['endEvent'] = 3e5;
+aedat['importParams']['endEvent'] = 3e5;
 
 if EULER:
     aedat['importParams']['filePath'] = '../../../scratch/kaenzign/aedat/' + filenames.aedat_names[args.recording-1]
@@ -107,6 +120,13 @@ f = h5py.File(hdf5_name, "w")
 d_img = f.create_dataset("images", (NR_FRAMES,TARGET_DIM[0],TARGET_DIM[1]), dtype='f')
 d_label = f.create_dataset("labels", (NR_FRAMES,), dtype='i')
 
+last_x = aedat['data']['polarity']['x'][0]
+last_y = aedat['data']['polarity']['y'][0]
+last_t = aedat['data']['polarity']['timeStamp'][0]
+
+
+first_frame_event = True
+omitted = 0
 
 for t,x,y,p in tqdm(zip(aedat['data']['polarity']['timeStamp'], aedat['data']['polarity']['x'], aedat['data']['polarity']['y'], aedat['data']['polarity']['polarity'])):
     if RESIZE:
@@ -120,9 +140,22 @@ for t,x,y,p in tqdm(zip(aedat['data']['polarity']['timeStamp'], aedat['data']['p
             img[TARGET_DIM[0]-1-x][TARGET_DIM[1]-1-y] -= 0.005
 
     if DVS_FRAME_TYPE == 1:
-        img[TARGET_DIM[0]-1-x][TARGET_DIM[1]-1-y] += 1
+        if SINGLE_MODE:
+            if t != last_t or x != last_x or y != last_y or first_frame_event:
+                img[TARGET_DIM[0] - 1 - x][TARGET_DIM[1] - 1 - y] += 1
+            else:
+                #print('time_cluster ommited at frame {}'.format(i))
+                omitted += 1
+
+        else:
+            img[TARGET_DIM[0]-1-x][TARGET_DIM[1]-1-y] += 1
 
     tmp_frame_timestamps.append(t)
+
+    last_x = x
+    last_y = y
+    last_t = t
+    first_frame_event = False
 
     i += 1
 
@@ -136,9 +169,14 @@ for t,x,y,p in tqdm(zip(aedat['data']['polarity']['timeStamp'], aedat['data']['p
                 img = misc.three_sigma_frame_clipping_evtsum(img)
                 img = misc.aps_frame_scaling(img)
 
-        # plt.imshow((img).T, cmap='gray', norm=NoNorm(vmin=0, vmax=1, clip=True))
-        # filenames.append('./fig' + "noisy_metro_" + str(k) + ".png")
-        # plt.savefig('./fig/' + "noisy_metro_" + str(k) + ".png")
+        if SAVE_FRAME_PLOTS:
+            fig = plt.imshow((img).T, cmap='gray', norm=NoNorm(vmin=0, vmax=1, clip=True))
+            plt.axis('off')
+            fig.axes.get_xaxis().set_visible(False)
+            fig.axes.get_yaxis().set_visible(False)
+            plt.savefig('./fig/{}_{}_{}.png'.format(k, DVS_FRAME_TYPE, TARGET_DIM), bbox_inches='tight', pad_inches = 0)
+            plt.savefig('./fig/{}_{}_{}.eps'.format(k, DVS_FRAME_TYPE, TARGET_DIM), format='eps', bbox_inches='tight', pad_inches = 0) # dpi=1000 ??
+            filenames.append('./fig' + "noisy_metro_" + str(k) + ".png")
 
         for j in range(last_j,len(timestamps)):
             if timestamps[j] > tmp_frame_timestamps[-1]:
@@ -161,6 +199,7 @@ for t,x,y,p in tqdm(zip(aedat['data']['polarity']['timeStamp'], aedat['data']['p
         if DVS_FRAME_TYPE == 1:
             img = np.zeros(TARGET_DIM)
         k += 1
+        first_frame_event = True
 
 
 # Fill up the labels of the first frames
@@ -170,3 +209,5 @@ for label in d_label:
         d_label[:i] = label
     else:
         i += 1
+
+print('{} events omitted to avoid subsampling timeclusters'.format(omitted))

@@ -1,3 +1,14 @@
+"""
+EVENT-BASED OBJECT RECOGNITION USING ANALOG AND SPIKING NEURAL NETWORKS
+Semesterproject
+
+test.py
+This module can be used to evaluate accuracies of a stored model on a testset stored in HDF5 fileformat
+
+@author: Nicolas Kaenzig, D-ITET, ETH Zurich
+"""
+
+
 import keras
 from keras.models import load_model
 import h5py
@@ -5,8 +16,8 @@ import misc
 import numpy as np
 import time
 
-MODEL = 'weights.11-0.98.h5'
-model_path = './model/dvs_36_evt_acc_D512_D512_L2/' + MODEL
+MODEL = 'weights.09-0.38.h5'
+model_path = './model/report/dvs36_evtacc_maxpool_B0_10E/' + MODEL
 
 TESTFILE = 'test.hdf5'
 test_data_path = './data/processed/dvs_36_evtacc/' + TESTFILE
@@ -14,7 +25,7 @@ test_data_path = './data/processed/dvs_36_evtacc/' + TESTFILE
 img_rows = 36
 img_cols = 36
 
-DENSE = True
+DENSE = False # To be used for models with 1-dim inputlayer such as MLPs
 
 
 test_h5 = h5py.File(test_data_path,'r')

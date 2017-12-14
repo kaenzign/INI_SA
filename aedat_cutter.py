@@ -1,3 +1,13 @@
+"""
+EVENT-BASED OBJECT RECOGNITION USING ANALOG AND SPIKING NEURAL NETWORKS
+Semesterproject
+
+aedat_cutter.py
+This module was used to slice .aedat recordings to get seperate and labeled DVS samples to be used as testset.
+
+@author: Nicolas Kaenzig, D-ITET, ETH Zurich
+"""
+
 import os
 import struct
 import time
@@ -15,12 +25,12 @@ args = parser.parse_args()
 
 print('PROCESSING RECORDING NR. ' + str(args.recording))
 
-EULER = False
-EVENTS_PER_FRAME = 5000
-TEST_FRACTION  = 0.2
-NR_FRAME_DIV = None # set to None to extract all frames, set to value in (0,1) to select the fraction of the test set to be used
-EVT_DVS = 0  # DVS event type
-EVT_APS = 1 # APS event
+EULER = False               # set True to run script on EULER computer
+EVENTS_PER_FRAME = 5000     # number of dvs events per sample
+TEST_FRACTION  = 0.2        # fraction of the testset size w.r.t. the size of the complete dataset
+NR_FRAME_DIV = None         # set to None to extract all frames, set to value in (0,1) to select the fraction of the test set to be used
+EVT_DVS = 0                 # DVS event type identifier
+EVT_APS = 1                 # APS event identifier
 
 if EULER:
     aedat_file = '../../../scratch/kaenzign/aedat/' + filenames.aedat_names[args.recording-1]
@@ -43,6 +53,16 @@ aeLen = 8
 
 def parse_header(file):
     # HEADER
+    """
+    Function to parse aedat headers. 
+    Returns file poninter pointing to line after header and parsed header lines.
+
+    :param file: aedat file descriptor
+    :return: p, header_lines
+        WHERE
+        p is file pointer that points to the first line after header
+        header_lines is list that contains all parsed header liness
+    """
     p = 0 # file pointer
     header_lines = []
     lt = file.readline()
@@ -55,6 +75,14 @@ def parse_header(file):
 
 def write_test_aedat(aedat_file, target_file, fraction):
 
+    """
+    Function to extract to last fraction events from a .aedat file, to be used as test set.
+
+    :param aedat_file: path of aedat file
+    :param target_file: file where the last fraction of the aedat_file will be stored
+    :param fraction: fraction of the .aedatfile to be extracted
+    :return: 
+    """
     aerdata_fh = open(aedat_file, 'rb')
     target_fh = open(target_file, 'wb')
 
@@ -87,6 +115,12 @@ def write_test_aedat(aedat_file, target_file, fraction):
 
 
 def check_target(aedat_file, target_file):
+    """
+    Function used for debugging. Compares two .aedat files if they are equal.
+
+    :param aedat_file: path of first aedat file to be compared
+    :param target_file: path of second aedat file to be compared
+    """
     aerdata_fh = open(aedat_file, 'rb')
     target_fh = open(target_file, 'rb')
 
@@ -104,6 +138,12 @@ def check_target(aedat_file, target_file):
         i += 1
 
 def extract_DVS_events(aedat_file, target_file):
+    """
+    Function that extracts DVS events e.g. from a DAVIS recording that also contains APS data.
+    
+    :param aedat_file: path of the .aedata file
+    :param target_file: .aedata file where the extracted DVS events are stored
+    """
     aerdata_fh = open(aedat_file, 'rb')
     target_fh = open(target_file, 'wb')
 
@@ -137,6 +177,12 @@ def extract_DVS_events(aedat_file, target_file):
         p += aeLen
 
 def extract_DVS_labels(nr_frames, frame_indexes):
+    """
+    Function that extracts labels of DVS samples stored in HDF5 file into json file.
+
+    :param nr_frames: The labels of the last nr_frames samples of the .h5 file will be extracted 
+    :param frame_indexes: used for subsambling of the labels
+    """
     dvs_h5 = h5py.File(hdf5_name, 'r')
 
     labels = dvs_h5['labels'][-nr_frames:]
@@ -161,6 +207,19 @@ def extract_DVS_labels(nr_frames, frame_indexes):
         json.dump(label_dict, f)
 
 def extract_k_frames(aedat_file, nr_frames, frame_size, k):
+    """
+    Extracts k samples from a .aedat file and uses corresponding labels stored in hdf5_name file to store the samples
+    into one of the 4 dirrectories according to their label: N, L, C, R
+
+    :param aedat_file: .aedat file where samples are to be extracted from
+    :param nr_frames: use only the last nr_frames of the .aedat (test set)
+    :param frame_size: nr of events per sample/frame 
+    :param k: number of samples to be extracted
+    :return: frame_indexes, skipped
+        WHERE
+        frame_indexes is indices of the extracted samples
+        skipped number of skipped invalid samples
+    """
     aerdata_fh = open(aedat_file, 'rb')
     dvs_h5 = h5py.File(hdf5_name, 'r')
 
@@ -215,12 +274,9 @@ def extract_k_frames(aedat_file, nr_frames, frame_size, k):
     return frame_indexes, skipped
 
 
-
-
-
+# FUNCTION CALLS
 
 start_time = time.time()
-# check_target(aedat_file, target_file)
 
 extract_DVS_events(aedat_file, full_target_file)
 

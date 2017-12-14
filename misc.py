@@ -1,7 +1,23 @@
+"""
+EVENT-BASED OBJECT RECOGNITION USING ANALOG AND SPIKING NEURAL NETWORKS
+Semesterproject
+
+misc.py
+Contains functions used for data preprocesing and training
+
+@author: Nicolas Kaenzig, D-ITET, ETH Zurich
+"""
+
 import numpy as np
 import h5py
 
 def three_sigma_frame_clipping_evtsum(frame):
+    """
+    Clipps all pixel intensities of a frame bigger than 3 times the standard deviation
+
+    :param frame: image frame to be processed
+    :return:  3-sigmal clipped image frame
+    """
     # Compute standard deviation of event-sum distribution
     # after removing zeros
     sigma = np.std(frame[np.nonzero(frame)])
@@ -13,7 +29,12 @@ def three_sigma_frame_clipping_evtsum(frame):
 
 
 def aps_frame_scaling(frame):
-    # scale frame pixel values to [0,1]
+    """
+    # Scales frame pixel values to [0,1] to obtain greyscale images
+
+    :param frame: image frame to be processed
+    :return: greyscale image
+    """
     min_pixel = np.min(frame)
     max_pixel = np.max(frame)
 
@@ -22,7 +43,12 @@ def aps_frame_scaling(frame):
 
 
 def three_sigma_frame_clipping(frame):
-    # Compute standard deviation of event-sum distribution
+    """
+    3-sigma clipping used for predator frames. Clipp all pixels with intensies smaller or bigger than 1.5 times std-dev
+
+    :param frame: image frame to be processed
+    :return: 3-sigmal clipped image frame
+    """
     sigma = np.std(frame)
     mean = np.mean(frame)
 
@@ -35,7 +61,12 @@ def three_sigma_frame_clipping(frame):
 
 
 def dvs_frame_scaling(frame):
-    # scale frame pixel values to [0,1], while remain 0.5 values unchanged
+    """
+    Scale frame pixel values to [0,1], while 0.5 remain values unchanged
+
+    :param frame: 
+    :return: greyscale image
+    """
     min_pixel = np.min(frame)
     max_pixel = np.max(frame)
 
@@ -67,6 +98,12 @@ def to_categorical(y, num_classes=None):
 def generate_batches_from_hdf5_file(hdf5_file, batch_size, dimensions, num_classes, shuffle):
     """
     Generator that returns batches of images ('xs') and labels ('ys') from a h5 file.
+    
+    :param hdf5_file: hdf5_file descriptor containing labeled dataset
+    :param batch_size: number of samples per batch
+    :param dimensions: dimensions of the frames
+    :param num_classes: number of output classes
+    :param shuffle: if True dataset is shuffled after each epoch
     """
     data_size = len(hdf5_file['labels'])
     indices = np.arange(data_size)
@@ -99,4 +136,3 @@ def generate_batches_from_hdf5_file(hdf5_file, batch_size, dimensions, num_class
             yield (xs, ys)
 
         # hdf5_file.close()
-

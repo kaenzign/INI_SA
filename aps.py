@@ -1,3 +1,15 @@
+"""
+EVENT-BASED OBJECT RECOGNITION USING ANALOG AND SPIKING NEURAL NETWORKS
+Semesterproject
+
+aps.py
+This module was used to extract aps frames from DAVIS .avi recordings.
+The frames can be supsampled and the number of samples can be increased by over-/underexposing pixel intensities
+3-sigma clipping around mean pixel intensities and scaling to [0,1] to optain greyscale images
+
+@author: Nicolas Kaenzig, D-ITET, ETH Zurich
+"""
+
 import filenames
 import argparse
 import numpy as np
@@ -9,9 +21,9 @@ from matplotlib.colors import NoNorm
 from scipy.misc import imresize
 from skimage.transform import rescale, resize
 
-EULER = True
-RESIZE = True
-EXPOSE = False
+EULER = True        # set True to run script on EULER computer
+RESIZE = True       # set True to resize/subsample the frames to TARGET_DIM
+EXPOSE = False      # create 3 samples out of one by under-/overexposing pixel intensities
 
 FRAME_DIM = (240,180)
 if RESIZE:
@@ -104,9 +116,6 @@ for t_aps in aps_timecodes:
     # print(k, t_aps, target_timestamps[i], aps_labels[k])
 
 
-# aps_frames = misc.avi_to_frame_list(avi_filename, gray=True)
-# aps_frames[0][0][0]
-
 vid = imageio.get_reader(avi_filename,  'ffmpeg')
 
 k = 0
@@ -135,9 +144,3 @@ for image in vid.iter_data():
     # print(image.mean())
 
 # plt.imshow((img).T, cmap='gray', norm=NoNorm(vmin=0, vmax=1, clip=True))
-
-i=0
-
-
-
-

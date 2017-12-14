@@ -1,9 +1,20 @@
+"""
+EVENT-BASED OBJECT RECOGNITION USING ANALOG AND SPIKING NEURAL NETWORKS
+Semesterproject
+
+train_data_generation.py
+The script extract_and_label_dvs.py generated a .h5 file containing the frames and labels for each recording.
+This script was used to combine the .h5 file of the seperate recordings into two big .h5 (trainset, testset)
+
+@author: Nicolas Kaenzig, D-ITET, ETH Zurich
+"""
+
 import h5py
 from os import listdir
 from os.path import isfile, join
 
-EULER = False
-MODE = '' # leave this string empty to process both dvs and aps, else set MODE='dvs' or MODE= 'aps'
+EULER = False   # set True to run script on EULER computer
+MODE = ''       # leave this string empty to process both dvs and aps, else set MODE='dvs' or MODE= 'aps'
 
 if EULER:
     processed_path = '../../../scratch/kaenzign/processed/'
@@ -75,4 +86,3 @@ train_output_file.close()
 print(MODE + ' Train images: ' + str(tot_nr_train_frames))
 print(MODE + ' Test images: ' + str(tot_nr_test_frames))
 print(MODE + ' Total images: ' + str(tot_nr_train_frames + tot_nr_test_frames))
-# hdf5_f.close()

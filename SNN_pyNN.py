@@ -8,8 +8,7 @@ import matplotlib.pyplot as plt
 
 MODEL = 'weights.02-0.49_brian'
 PATH = './model/dv36_evtacc_D64_B0_30E'
-MODEL = 'mdl_brian'
-PATH = './model/DUMMY'
+
 
 def load_assembly(path, filename):
     """Load the populations in an assembly.
@@ -79,17 +78,6 @@ def read_weights(filepath):
 
 
 
-def load(path, filename):
-
-    layers = load_assembly(path, filename)
-    for i in range(len(layers ) -1):
-        filepath = os.path.join(path, layers[ i +1].label)
-        assert os.path.isfile(filepath), \
-            "Connections were not found at specified location."
-        connections = read_weights(filepath)
-        connector = sim.FromListConnector(connections, column_names=["i", "j", "weight", "delay"])
-        proj_1 = sim.Projection(layers[i], layers[i+1], connector)
-
 # def load(path, filename):
 #
 #     layers = load_assembly(path, filename)
@@ -97,18 +85,27 @@ def load(path, filename):
 #         filepath = os.path.join(path, layers[ i +1].label)
 #         assert os.path.isfile(filepath), \
 #             "Connections were not found at specified location."
-#         with warnings.catch_warnings():
-#             warnings.simplefilter('ignore')
-#             warnings.warn('deprecated', UserWarning)
-#             sim.Projection(layers[i], layers[ i +1],
-#                                 sim.FromFileConnector(filepath))
+#         connections = read_weights(filepath)
+#         connector = sim.FromListConnector(connections, column_names=["i", "j", "weight", "delay"])
+#         proj_1 = sim.Projection(layers[i], layers[i+1], connector)
+
+def load(path, filename):
+
+    layers = load_assembly(path, filename)
+    for i in range(len(layers ) -1):
+        filepath = os.path.join(path, layers[ i +1].label)
+        assert os.path.isfile(filepath), \
+            "Connections were not found at specified location."
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            warnings.warn('deprecated', UserWarning)
+            sim.Projection(layers[i], layers[ i +1],
+                                sim.FromFileConnector(filepath))
 
 
-#sim, options = get_simulator(("--plot-figure", "Plot the simulation results to a file.", {"action": "store_true"}),
-#                             ("--debug", "Print debugging information"))
 
 sim.setup(timestep=1.0)
-sim.set_number_of_neurons_per_core(sim.IF_curr_exp, 100)
+#sim.set_number_of_neurons_per_core(sim.IF_curr_exp, 100)
 load(PATH, MODEL)
 
 simtime = 10
