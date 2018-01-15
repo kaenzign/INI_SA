@@ -27,7 +27,7 @@ import os
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-model", "--model", type=int, help="nunber of neurons")
+parser.add_argument("-model", "--model", type=int, help="model to be used. 1: CNN, 2: MLP")
 parser.add_argument("-N", "--neurons", type=int, help="nunber of neurons")
 parser.add_argument("-tag", "--tag", type=str, help="tag for hdf5 file name")
 args = parser.parse_args()

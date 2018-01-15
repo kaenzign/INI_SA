@@ -25,16 +25,17 @@ args = parser.parse_args()
 
 print('PROCESSING RECORDING NR. ' + str(args.recording))
 
-EULER = False               # set True to run script on EULER computer
+EULER = True                # set True to run script on EULER computer
 EVENTS_PER_FRAME = 5000     # number of dvs events per sample
 TEST_FRACTION  = 0.2        # fraction of the testset size w.r.t. the size of the complete dataset
-NR_FRAME_DIV = None         # set to None to extract all frames, set to value in (0,1) to select the fraction of the test set to be used
+DIV_TEST_FRAMES = 0.01        #  Number of test samples to be extracted. set to None to extract all frames,
+SEPARATE_FILES = False
 EVT_DVS = 0                 # DVS event type identifier
 EVT_APS = 1                 # APS event identifier
 
 if EULER:
     aedat_file = '../../../scratch/kaenzign/aedat/' + filenames.aedat_names[args.recording-1]
-    hdf5_name = '../../../scratch/kaenzign/processed/full_36/dvs_recording' + str(args.recording) + '_36x36.hdf5'
+    hdf5_name = '../../../scratch/kaenzign/processed/dvs_recording' + str(args.recording) + '_36x36.hdf5'
     full_target_file = '../../../scratch/kaenzign/aedat/full_dvs_' + str(args.recording) + '.aedat'
     test_target_file = '../../../scratch/kaenzign/aedat/test_dvs_' + str(args.recording) + '.aedat'
 else:
@@ -206,7 +207,7 @@ def extract_DVS_labels(nr_frames, frame_indexes):
     with open('./data/aedat/dvs_test_labels_' + str(args.recording) + '.json', 'w') as f:
         json.dump(label_dict, f)
 
-def extract_k_frames(aedat_file, nr_frames, frame_size, k):
+def extract_k_frames(aedat_file, nr_frames, frame_size, k, separate_files=SEPARATE_FILES):
     """
     Extracts k samples from a .aedat file and uses corresponding labels stored in hdf5_name file to store the samples
     into one of the 4 dirrectories according to their label: N, L, C, R
@@ -237,6 +238,11 @@ def extract_k_frames(aedat_file, nr_frames, frame_size, k):
 
     # HEADER
     p, header_lines = parse_header(aerdata_fh)
+    sample_counts = {}
+    sample_counts['N'] = 0
+    sample_counts['L'] = 0
+    sample_counts['C'] = 0
+    sample_counts['R'] = 0
     skipped = 0
 
     for nr, index in enumerate(frame_indexes):
@@ -255,43 +261,55 @@ def extract_k_frames(aedat_file, nr_frames, frame_size, k):
         
         if labels[nr] == 1:
             dir = 'N/'
+            sample_counts['N'] += 1
         elif labels[nr] == 2:
             dir = 'L/'
+            sample_counts['L'] += 1
         elif labels[nr] == 3:
             dir = 'C/'
+            sample_counts['C'] += 1
         elif labels[nr] == 4:
             dir = 'R/'
+            sample_counts['R'] += 1
         
         target_dir = os.path.dirname(aedat_file) + '/' + dir
         if not os.path.exists(target_dir):
             os.makedirs(target_dir)
-        target_path = target_dir + 'rec_' + str(args.recording) + '_sample_' + str(nr) + '.aedat'
-        target_fh = open(target_path, 'wb')
 
-        target_fh.writelines(header_lines)
+        if separate_files:
+            target_path = target_dir + 'rec_' + str(args.recording) + '_sample_' + str(nr) + '.aedat'
+            target_fh = open(target_path, 'wb')
+            target_fh.writelines(header_lines)
+        else:
+            target_path = target_dir + 'rec_' + str(args.recording) + '.aedat'
+            target_fh = open(target_path, 'ab')
+            if sample_counts[dir[:-1]] == 1:
+                target_fh.writelines(header_lines)
+
         target_fh.write(frame_data)
 
-    return frame_indexes, skipped
+    return frame_indexes, skipped, sample_counts
 
 
 # FUNCTION CALLS
 
 start_time = time.time()
 
-extract_DVS_events(aedat_file, full_target_file)
+#extract_DVS_events(aedat_file, full_target_file)
 
 nr_events = write_test_aedat(full_target_file, test_target_file, TEST_FRACTION)
 nr_frames = int(nr_events/EVENTS_PER_FRAME)
 
-if NR_FRAME_DIV != None:
-    k = int(NR_FRAME_DIV*nr_frames)
+if DIV_TEST_FRAMES != None:
+    k = int(DIV_TEST_FRAMES*nr_frames)
 else:
     k = nr_frames
 
-frame_indexes, skipped = extract_k_frames(test_target_file, nr_frames, 5000, k)
+frame_indexes, skipped, sample_counts = extract_k_frames(test_target_file, nr_frames, 5000, k)
 
 # extract_DVS_labels(nr_frames, frame_indexes)
 
 print('total number of frames: ' + str(nr_frames))
 print('extracted number of frames: ' + str(k-skipped))
-print("--- %s seconds ---" % (time.time() - start_time))
+print('sample counts {}'.format(sample_counts))
+print("--- {}s seconds ---".format(time.time() - start_time))
